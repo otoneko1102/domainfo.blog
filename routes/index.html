@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./src/style.css" />
+    <title><%- serviceName %></title>
+    <meta name="description" content="<%- serviceDescription %>" />
+
+    <meta property="og:title" content="<%- serviceName %>" />
+    <meta property="og:description" content="<%- serviceDescription %>" />
+    <meta property="og:image" content="<%- serviceThumbnailImage %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="<%- serviceName %>" />
+    <meta property="og:locale" content="ja_JP" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%- serviceName %>" />
+    <meta name="twitter:description" content="<%- serviceDescription %>" />
+    <meta name="twitter:image" content="<%- serviceThumbnailImage %>" />
+    <meta name="theme-color" content="#4A90E2" />
+
+    <link rel="icon" href="<%- serviceIconImage %>" type="image/png">
+
+    <script>
+      (function () {
+        const theme = localStorage.getItem("theme");
+        const prefersDark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const initialTheme = theme || (prefersDark ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", initialTheme);
+      })();
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="header-wrapper">
+        <div class="header-left">
+          <button
+            id="editor-menu-open-btn"
+            class="icon-btn hidden"
+            title="メニューを開く"
+          >
+            <span class="icon menu-icon"></span>
+          </button>
+          <h1><a href="/"><%- serviceName %></a></h1>
+        </div>
+        <div class="header-right">
+          <button
+            id="theme-toggle-btn"
+            class="icon-btn"
+            title="テーマを切り替える"
+          >
+            <span class="icon sun-icon"></span>
+            <span class="icon moon-icon"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="header-bottom">
+      <img src="<%- serviceHeaderImage %>" title="ヘッダー画像" alt="ヘッダー画像">
+    </div>
+
+    <div class="subtitle-container">
+      <p class="subtitle"><%- serviceDescription %></p>
+    </div>
+
+    <div id="editor-menu-overlay" class="hidden"></div>
+    <div id="editor-menu-container"></div>
+
+    <main id="app-container">
+      <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>管理者認証</h2>
+          <p>パスワードを入力してください。</p>
+          <input type="password" id="password-input" />
+          <button id="login-button" class="button">認証</button>
+          <p id="login-error" class="error-message"></p>
+        </div>
+      </div>
+      <div id="content-area"></div>
+    </main>
+
+    <footer>
+      <span id="copyright-notice">
+        <%- serviceStartYear %> - <span id="current-year"></span> &copy; <%- serviceAuthor %>
+      </span>
+      <span id="admin-link-container"></span>
+      <div class="footer-buttons">
+        <button id="copy-feed-btn" class="icon-btn" title="RSS FeedのURLをコピー">
+          <span class="icon rss-icon"></span>
+        </button>
+        <button id="copy-url-btn" class="icon-btn" title="現在のURLをコピー">
+          <span class="icon link-icon"></span>
+        </button>
+      </div>
+
+    </footer>
+    <script type="module" src="./src/script.js"></script>
+  </body>
+</html>

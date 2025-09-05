@@ -236,9 +236,15 @@ const handlePublicRoutes = async (path) => {
 
 const parseMarkdown = (markdownText) => {
   const rawHtml = marked.parse(markdownText || "");
-  const processedHtml = rawHtml.replace(
+  // 外部リンク
+  let processedHtml = rawHtml.replace(
     /<a href="http/g,
     '<a target="_blank" rel="noopener noreferrer" href="http'
+  );
+  // PDF
+  processedHtml = processedHtml.replace(
+    /<img src="([^"]+\.pdf)"[^>]*>/g,
+    '<embed class="xpdf" data-pdf="$1" data-pdf-size="30vw">'
   );
   return processedHtml;
 };
@@ -304,33 +310,57 @@ const renderEditorView = async (id) => {
   }
   const data = await response.json();
   const markdownContent = data.content;
-  document.getElementById("edit").innerHTML =
-    `<textarea id="editor">${markdownContent}</textarea>`;
+  document.getElementById(
+    "edit"
+  ).innerHTML = `<textarea id="editor">${markdownContent}</textarea>`;
   document.getElementById("view").innerHTML = parseMarkdown(markdownContent);
+
+  if (window.initializeXpdfViewers) {
+    window.initializeXpdfViewers();
+  }
+
   await setupEditorEvents(id);
   await renderImageGallery(id);
 
   setTimeout(syncPaneHeights, 0);
 };
+
 const renderImageGallery = async (id) => {
   const gallery = document.getElementById("image-gallery");
   const editor = document.getElementById("editor");
   if (!gallery || !editor) return;
+
   const res = await fetch(`/api/articles/${id}/files`);
   const files = await res.json();
   if (files.length === 0) {
     gallery.innerHTML = "<p>アップロードされたファイルはありません。</p>";
     return;
   }
+
   gallery.innerHTML = files
     .map((filename) => {
       const filePath = `/files/${id}/${filename}`;
-      return `<div class="thumbnail"><img src="${filePath}" alt="${filename}" title="クリックしてMarkdownを挿入" data-filepath="${filePath}" /><button class="delete-btn" data-filename="${filename}" title="削除する">×</button></div>`;
+      if (filename.toLowerCase().endsWith(".pdf")) {
+        return `<div class="thumbnail pdf-thumbnail">
+                  <a href="${filePath}" title="${filename}をクリックしてMarkdownを挿入" data-filepath="${filePath}">${filename}</a>
+                  <button class="delete-btn" data-filename="${filename}" title="削除する">×</button>
+                </div>`;
+      }
+      return `<div class="thumbnail">
+                <img src="${filePath}" alt="${filename}" title="クリックしてMarkdownを挿入" data-filepath="${filePath}" />
+                <button class="delete-btn" data-filename="${filename}" title="削除する">×</button>
+              </div>`;
     })
     .join("");
-  gallery.querySelectorAll(".thumbnail img").forEach((img) => {
-    img.addEventListener("click", () => {
-      const markdownToInsert = `\n![${img.alt}](${img.dataset.filepath})\n`;
+
+  gallery.querySelectorAll(".thumbnail img, .thumbnail a").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      if (e.currentTarget.tagName === "A") {
+        e.preventDefault();
+      }
+      const markdownToInsert = `\n![${item.alt || item.textContent}](${
+        item.dataset.filepath
+      })\n`;
       const currentPos = editor.selectionStart;
       editor.value =
         editor.value.slice(0, currentPos) +
@@ -341,6 +371,7 @@ const renderImageGallery = async (id) => {
       editor.dispatchEvent(new Event("input"));
     });
   });
+
   gallery.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -349,6 +380,7 @@ const renderImageGallery = async (id) => {
     });
   });
 };
+
 const renderPublicView = async (id) => {
   contentArea.innerHTML = "<p>読み込み中...</p>";
   const response = await fetch(`/api/articles/${id}`);
@@ -361,14 +393,21 @@ const renderPublicView = async (id) => {
       <a href="/" class="back-to-list-link">&larr; 記事一覧に戻る</a>
       <div class="view-public">${parseMarkdown(data.content)}</div>
     `;
+
+  if (window.initializeXpdfViewers) {
+    window.initializeXpdfViewers();
+  }
 };
+
 const renderArticleList = async (mode, page = 1) => {
   let searchTerm = "";
   let sortKey = "createdAt";
   let sortOrder = "desc";
   const render = async (currentPage) => {
     const response = await fetch(
-      `/api/articles?view=${mode}&q=${encodeURIComponent(searchTerm)}&page=${currentPage}&sortKey=${sortKey}&sortOrder=${sortOrder}`
+      `/api/articles?view=${mode}&q=${encodeURIComponent(
+        searchTerm
+      )}&page=${currentPage}&sortKey=${sortKey}&sortOrder=${sortOrder}`
     );
     const {
       articles,
@@ -389,9 +428,15 @@ const renderArticleList = async (mode, page = 1) => {
             month: "long",
             day: "numeric",
           });
-        const createdDateStr = formatDate(createdAtDate);
-        const updatedDateStr = formatDate(updatedAtDate);
+        const createdDateStr = article.createdAt
+          ? formatDate(createdAtDate)
+          : "---";
+        const updatedDateStr = article.updatedAt
+          ? formatDate(updatedAtDate)
+          : "---";
         const isUpdated =
+          article.createdAt &&
+          article.updatedAt &&
           createdAtDate.toDateString() !== updatedAtDate.toDateString();
         const tagsHTML =
           article.tags && article.tags.length > 0
@@ -399,7 +444,27 @@ const renderArticleList = async (mode, page = 1) => {
                 .map((tag) => `<span class="tag">${tag}</span>`)
                 .join(" / ")
             : "";
-        articlesHTML += `<div class="article-card"><div class="article-tags">${tagsHTML}</div><a href="${link}" class="article-title"><h2>${article.title}</h2></a><div class="article-meta"><div class="article-dates"><span>投稿日: ${article.createdAt ? `<time datetime="${article.createdAt}">${createdDateStr}</time>` : "<span>---</span>"}</span>${isUpdated ? `<span>最終更新日: <time datetime="${article.updatedAt}">${updatedDateStr}</time></span>` : ""}</div><div class="article-meta-right">${mode === "admin" ? `<span class="status ${article.public ? "public" : "private"}">${article.public ? "公開" : "非公開"}</span>` : ""}${mode === "admin" ? `<button class="article-delete-btn" data-id="${article.id}" data-title="${article.title}">削除</button>` : ""}</div></div></div>`;
+        articlesHTML += `<div class="article-card"><div class="article-tags">${tagsHTML}</div><a href="${link}" class="article-title"><h2>${
+          article.title
+        }</h2></a><div class="article-meta"><div class="article-dates"><span>投稿日: ${
+          article.createdAt
+            ? `<time datetime="${article.createdAt}">${createdDateStr}</time>`
+            : "<span>---</span>"
+        }</span>${
+          isUpdated
+            ? `<span>最終更新日: <time datetime="${article.updatedAt}">${updatedDateStr}</time></span>`
+            : ""
+        }</div><div class="article-meta-right">${
+          mode === "admin"
+            ? `<span class="status ${article.public ? "public" : "private"}">${
+                article.public ? "公開" : "非公開"
+              }</span>`
+            : ""
+        }${
+          mode === "admin"
+            ? `<button class="article-delete-btn" data-id="${article.id}" data-title="${article.title}">削除</button>`
+            : ""
+        }</div></div></div>`;
       });
     }
     document.getElementById("articles-grid").innerHTML = articlesHTML;
@@ -455,7 +520,6 @@ const renderArticleList = async (mode, page = 1) => {
       });
     }
   };
-  // contentArea.innerHTML = `<div class="list-header"><h2>${mode === "admin" ? "記事管理" : "記事一覧"}</h2>${mode === "admin" ? `<button id="new-article-btn" class="button">新規作成</button>` : ""}</div><div class="search-container"><input type="search" id="search-input" placeholder="記事名またはタグで検索..."></div><div id="articles-grid"></div><div id="pagination-container" class="pagination"></div>`;
   contentArea.innerHTML = `
     <div class="list-header">
       <h2>${mode === "admin" ? "記事管理" : "記事一覧"}</h2>
@@ -471,7 +535,11 @@ const renderArticleList = async (mode, page = 1) => {
         </select>
       </div>
     </div>
-    ${mode === "admin" ? `<button id="new-article-btn" class="button">新規作成</button>` : ""}
+    ${
+      mode === "admin"
+        ? `<button id="new-article-btn" class="button">新規作成</button>`
+        : ""
+    }
     <div class="search-container">
       <input type="search" id="search-input" placeholder="記事名またはタグで検索...">
     </div>
@@ -487,14 +555,20 @@ const renderPagination = (mode, totalPages, currentPage) => {
   let html = "";
   html +=
     currentPage > 1
-      ? `<a href="${basePath}?page=${currentPage - 1}" class="page-link" data-page="${currentPage - 1}">&laquo; 前へ</a>`
+      ? `<a href="${basePath}?page=${
+          currentPage - 1
+        }" class="page-link" data-page="${currentPage - 1}">&laquo; 前へ</a>`
       : `<span class="page-link disabled">&laquo; 前へ</span>`;
   for (let i = 1; i <= totalPages; i++) {
-    html += `<a href="${basePath}?page=${i}" class="page-link ${i === currentPage ? "active" : ""}" data-page="${i}">${i}</a>`;
+    html += `<a href="${basePath}?page=${i}" class="page-link ${
+      i === currentPage ? "active" : ""
+    }" data-page="${i}">${i}</a>`;
   }
   html +=
     currentPage < totalPages
-      ? `<a href="${basePath}?page=${currentPage + 1}" class="page-link" data-page="${currentPage + 1}">次へ &raquo;</a>`
+      ? `<a href="${basePath}?page=${
+          currentPage + 1
+        }" class="page-link" data-page="${currentPage + 1}">次へ &raquo;</a>`
       : `<span class="page-link disabled">次へ &raquo;</span>`;
   return html;
 };
@@ -513,12 +587,15 @@ const setupEditorEvents = async (id) => {
     view.innerHTML = parseMarkdown(editor.value);
     hasUnsavedChanges = true;
     syncPaneHeights();
+    if (window.initializeXpdfViewers) {
+      window.initializeXpdfViewers();
+    }
   });
 
   beforeUnloadHandler = (e) => {
     if (hasUnsavedChanges) {
       e.preventDefault();
-      e.returnValue = ""; // 古いブラウザ用
+      e.returnValue = "";
     }
   };
   window.addEventListener("beforeunload", beforeUnloadHandler);
@@ -569,16 +646,6 @@ const setupEditorEvents = async (id) => {
       alert(result.message);
       fileInput.value = "";
       filenameInput.value = "";
-      // アップロード後に自動で記事内に埋め込む
-      // const markdownToInsert = `\n![${result.filename}](${result.filepath})\n`;
-      // const currentPos = editor.selectionStart;
-      // editor.value =
-      //   editor.value.slice(0, currentPos) +
-      //   markdownToInsert +
-      //   editor.value.slice(currentPos);
-      // editor.focus();
-      // editor.selectionEnd = currentPos + markdownToInsert.length;
-      // editor.dispatchEvent(new Event("input"));
       await renderImageGallery(id);
     } else {
       alert(`エラー: ${result.message}`);
@@ -635,7 +702,9 @@ const setupEditorEvents = async (id) => {
     actionsDiv.innerHTML = `
       <button id="save-btn" class="button">保存</button>
       <button id="settings-btn" class="button">記事設定</button>
-      <button id="toggle-public-btn" class="button ${currentArticle.public ? "public" : "private"}">
+      <button id="toggle-public-btn" class="button ${
+        currentArticle.public ? "public" : "private"
+      }">
         ${publicButtonText}
       </button>
     `;
@@ -654,11 +723,11 @@ const setupEditorEvents = async (id) => {
       });
       saveStatus.textContent = "完了！";
       hasUnsavedChanges = false;
+      isSaving = false;
       alert("保存しました！");
       setTimeout(() => {
         saveStatus.remove();
-        isSaving = false;
-      }, 500);
+      }, 1500);
     });
     document
       .getElementById("toggle-public-btn")
@@ -699,7 +768,8 @@ const handleNewArticle = async () => {
       body: JSON.stringify(getAuthBody({ id, title })),
     });
     if (response.ok) {
-      window.location.href = `/a/${id}`;
+      history.pushState(null, "", `/a/${id}`);
+      router();
     } else {
       const err = await response.json();
       alert(`記事の作成に失敗しました: ${err.message}`);
@@ -726,7 +796,8 @@ const handleSettings = async (oldId, oldTitle) => {
     const result = await response.json();
     if (response.ok) {
       alert(result.message);
-      window.location.href = `/a/${result.newId}`;
+      history.pushState(null, "", `/a/${result.newId}`);
+      router();
     } else {
       alert(`エラー: ${result.message}`);
     }

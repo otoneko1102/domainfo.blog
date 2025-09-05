@@ -244,7 +244,7 @@ const parseMarkdown = (markdownText) => {
   // PDF
   processedHtml = processedHtml.replace(
     /<img src="([^"]+\.pdf)"[^>]*>/g,
-    '<embed class="xpdf" data-pdf="$1" data-pdf-size="30vw">'
+    '<embed class="xpdf" data-pdf="$1" data-pdf-size="100%">'
   );
   return processedHtml;
 };

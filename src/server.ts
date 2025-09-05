@@ -23,6 +23,7 @@ interface AllMetadata {
 
 // セットアップ
 const app = express();
+app.set('trust proxy', 1); // For Nginx
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const BASE_URL: string = process.env?.BASE_URL || `http://localhost:${PORT}`;
@@ -57,7 +58,8 @@ function setup(): void {
 }
 setup();
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(limiter);
 app.use(express.static(path.join(__dirname, "../lib/components")));
 app.use("/src", express.static(path.join(__dirname, "../routes/src")));

@@ -24,7 +24,8 @@
     "marked": "^16.2.0",
     "multer": "^2.0.2",
     "rss": "^1.2.2",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "xpdf-viewer": "^3.1.4"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",

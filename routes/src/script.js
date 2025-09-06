@@ -1,6 +1,36 @@
 import { marked } from "marked";
+import "xpdf-viewer";
 
-marked.setOptions({
+// marked.setOptions({
+//   breaks: true,
+// });
+
+const underlineExtension = {
+  name: "underline",
+  level: "inline",
+
+  tokenizer(src) {
+    const rule = /^__(.+?)__/;
+    const match = rule.exec(src);
+
+    if (match) {
+      const text = match[1];
+      return {
+        type: "underline",
+        raw: match[0],
+        text: text,
+        tokens: this.lexer.inlineTokens(text),
+      };
+    }
+  },
+
+  renderer(token) {
+    return `<u>${this.parser.parseInline(token.tokens)}</u>`;
+  },
+};
+
+marked.use({
+  extensions: [underlineExtension],
   breaks: true,
 });
 
@@ -12,7 +42,7 @@ let beforeUnloadHandler = null;
 let hasUnsavedChanges = false;
 
 const getAuthBody = (body = {}) => {
-  const password = sessionStorage.getItem("adminPassword");
+  const password = dataStorage.getItem("adminPassword");
   return { ...body, password };
 };
 
@@ -59,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const currentTheme = document.documentElement.getAttribute("data-theme");
       const newTheme = currentTheme === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", newTheme);
-      localStorage.setItem("theme", newTheme);
+      dataStorage.setItem("theme", newTheme);
     });
   }
 
@@ -174,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const checkAuth = async () => {
-  const storedPassword = sessionStorage.getItem("adminPassword");
+  const storedPassword = dataStorage.getItem("adminPassword");
   if (!storedPassword) return false;
   try {
     const response = await fetch("/api/login", {
@@ -205,7 +235,7 @@ const handleLogin = async () => {
     body: JSON.stringify({ password }),
   });
   if (response.ok) {
-    sessionStorage.setItem("adminPassword", password);
+    dataStorage.setItem("adminPassword", password);
     await router();
   } else {
     loginError.textContent = "パスワードが違います。";
@@ -636,7 +666,7 @@ const setupEditorEvents = async (id) => {
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
     formData.append("filename", filenameInput.value);
-    formData.append("password", sessionStorage.getItem("adminPassword"));
+    formData.append("password", dataStorage.getItem("adminPassword"));
     const response = await fetch(`/api/articles/${id}/files`, {
       method: "POST",
       body: formData,

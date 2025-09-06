@@ -22,10 +22,13 @@
 
     <link rel="icon" href="<%- serviceIconImage %>" type="image/png">
 
-    <script src="https://unpkg.com/xpdf-viewer/pdf.js" defer></script>
+    <!-- <script src="https://unpkg.com/xpdf-viewer/pdf.js" defer></script> -->
     <script>
+      // Security level
+      const isStrictSecurity = false; // Default: true
+      const dataStorage = isStrictSecurity ? sessionStorage : localStorage;
       (function () {
-        const theme = localStorage.getItem("theme");
+        const theme = dataStorage.getItem("theme");
         const prefersDark =
           window.matchMedia &&
           window.matchMedia("(prefers-color-scheme: dark)").matches;

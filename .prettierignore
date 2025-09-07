@@ -6,6 +6,7 @@ dist/
 lib/
 routes/index.html
 
+.prettierrc.json
 ecosystem.config.js
 package-lock.json
 package.json

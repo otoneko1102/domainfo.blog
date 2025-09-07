@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (hasUnsavedChanges) {
         if (
           !confirm(
-            "編集中の内容が保存されていません。ページを離れてもよろしいですか？"
+            "編集中の内容が保存されていません。ページを離れてもよろしいですか？",
           )
         ) {
           return;
@@ -269,12 +269,12 @@ const parseMarkdown = (markdownText) => {
   // 外部リンク
   let processedHtml = rawHtml.replace(
     /<a href="http/g,
-    '<a target="_blank" rel="noopener noreferrer" href="http'
+    '<a target="_blank" rel="noopener noreferrer" href="http',
   );
   // PDF
   processedHtml = processedHtml.replace(
     /<img src="([^"]+\.pdf)"[^>]*>/g,
-    '<embed class="xpdf" data-pdf="$1" data-pdf-size="100%">'
+    '<embed class="xpdf" data-pdf="$1" data-pdf-size="100%">',
   );
   return processedHtml;
 };
@@ -340,9 +340,8 @@ const renderEditorView = async (id) => {
   }
   const data = await response.json();
   const markdownContent = data.content;
-  document.getElementById(
-    "edit"
-  ).innerHTML = `<textarea id="editor">${markdownContent}</textarea>`;
+  document.getElementById("edit").innerHTML =
+    `<textarea id="editor">${markdownContent}</textarea>`;
   document.getElementById("view").innerHTML = parseMarkdown(markdownContent);
 
   if (window.initializeXpdfViewers) {
@@ -436,8 +435,8 @@ const renderArticleList = async (mode, page = 1) => {
   const render = async (currentPage) => {
     const response = await fetch(
       `/api/articles?view=${mode}&q=${encodeURIComponent(
-        searchTerm
-      )}&page=${currentPage}&sortKey=${sortKey}&sortOrder=${sortOrder}`
+        searchTerm,
+      )}&page=${currentPage}&sortKey=${sortKey}&sortOrder=${sortOrder}`,
     );
     const {
       articles,
@@ -697,7 +696,7 @@ const setupEditorEvents = async (id) => {
     tagsListDiv.innerHTML = currentTags
       .map(
         (tag, index) =>
-          `<div class="tag-item"><span>${tag}</span><button class="delete-tag-btn" data-index="${index}">×</button></div>`
+          `<div class="tag-item"><span>${tag}</span><button class="delete-tag-btn" data-index="${index}">×</button></div>`,
       )
       .join("");
     document.querySelectorAll(".delete-tag-btn").forEach((btn) => {
@@ -748,7 +747,7 @@ const setupEditorEvents = async (id) => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          getAuthBody({ content: editor.value, tags: currentTags })
+          getAuthBody({ content: editor.value, tags: currentTags }),
         ),
       });
       saveStatus.textContent = "完了！";
@@ -776,14 +775,14 @@ const setupEditorEvents = async (id) => {
     document
       .getElementById("settings-btn")
       .addEventListener("click", () =>
-        handleSettings(id, currentArticle.title)
+        handleSettings(id, currentArticle.title),
       );
   };
   updateButtons();
 };
 const handleNewArticle = async () => {
   const id = prompt(
-    "新しい記事のIDを入力してください (小文字英数、ハイフンのみ)"
+    "新しい記事のIDを入力してください (小文字英数、ハイフンのみ)",
   );
   if (!id || !/^[a-z0-9-]+$/.test(id)) {
     if (id !== null) alert("無効なIDです。");

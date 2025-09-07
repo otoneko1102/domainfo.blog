@@ -1,0 +1,14 @@
+node_modules/
+.env
+
+private/
+dist/
+lib/
+routes/index.html
+
+ecosystem.config.js
+package-lock.json
+package.json
+README.md
+tsconfig.json
+vite.config.js

@@ -67,6 +67,10 @@ ul {
   list-style: none;
   padding: 0;
 }
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
 /* ヘッダー */
 header {

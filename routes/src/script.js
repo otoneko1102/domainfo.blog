@@ -1,4 +1,5 @@
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import "xpdf-viewer";
 
 // marked.setOptions({
@@ -264,12 +265,20 @@ const handlePublicRoutes = async (path) => {
   }
 };
 
+/**
+ * @function
+ * @param {string} markdownText - Raw md
+ * @returns Raw HTML
+ */
 const parseMarkdown = (markdownText) => {
   const rawHtml = marked.parse(markdownText || "");
+  // XSS
+  const sanitizedHtml = DOMPurify.sanitize(rawHtml);
   // 外部リンク
-  let processedHtml = rawHtml.replace(
+  let processedHtml = sanitizedHtml;
+  processedHtml = processedHtml.replace(
     /<a href="http/g,
-    '<a target="_blank" rel="noopener noreferrer" href="http',
+    '<a target="_blank" rel="noopener noreferrer nofollow" href="http',
   );
   // PDF
   processedHtml = processedHtml.replace(

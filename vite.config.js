@@ -1,5 +1,4 @@
 import { defineConfig, loadEnv } from "vite";
-import { createHtmlPlugin } from "vite-plugin-html";
 import { createMultiHtmlPlugin } from "vite-plugin-multi-html"
 
 export default defineConfig(({ mode }) => {

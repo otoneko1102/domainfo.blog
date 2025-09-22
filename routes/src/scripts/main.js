@@ -1,7 +1,13 @@
 import "xpdf-viewer";
 import router from "./router.js";
 import { initializeGlobalEventListeners } from "./ui/global/main.js";
-import { state, setState } from "./state.js";
+import {
+  isStrictSecurity,
+  dataStorage,
+  contentArea,
+  state,
+  setState,
+} from "./state.js";
 
 // テーマ
 (function () {

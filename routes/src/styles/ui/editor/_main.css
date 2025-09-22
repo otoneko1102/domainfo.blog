@@ -1,0 +1,255 @@
+/* --- Editor Layout --- */
+.editor-main-container {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.flex {
+  display: flex;
+  gap: 2rem;
+  flex-grow: 1;
+  min-height: 0;
+}
+#edit,
+#view {
+  width: 50%;
+  background-color: var(--surface-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: visible;
+}
+#editor {
+  width: 100%;
+  flex-grow: 1; /* Take up available space */
+  min-height: 500px;
+  padding: 1.5rem;
+  font-size: 1rem;
+  font-family: var(--monospace-font-family);
+  border: none;
+  background: none;
+  color: var(--text-color);
+  resize: vertical;
+  outline: none;
+}
+
+/* --- Editor Slide Menu --- */
+#editor-menu-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100%;
+  background-color: var(--surface-bg-color);
+  box-shadow: 4px 0 15px var(--shadow-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+}
+#editor-menu-container.is-open {
+  transform: translateX(0);
+}
+#editor-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 1;
+}
+#editor-menu-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.editor-menu-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.editor-menu-header h3 {
+  margin: 0;
+}
+.editor-menu-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.view-toggle {
+  display: none;
+  width: 100%;
+  background-color: var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 4px;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 1.5rem;
+}
+.view-toggle-btn {
+  width: 100%;
+  padding: 8px;
+  background-color: transparent;
+  color: var(--subtle-text-color);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--border-radius);
+}
+.view-toggle-btn.active {
+  background-color: var(--surface-bg-color);
+  color: var(--text-color);
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+/* --- Upload Component (in Menu) --- */
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+.upload-container h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+.upload-container input {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-bg-color);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+.upload-container button {
+  width: 100%;
+}
+
+/* --- Image Gallery (in Menu) --- */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.thumbnail {
+  position: relative;
+}
+.thumbnail img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  display: block;
+}
+.thumbnail img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px var(--shadow-color);
+}
+.delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.thumbnail:hover .delete-btn {
+  opacity: 1;
+}
+
+/* --- Tags Component (in Menu) --- */
+.tags-container {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+.tags-container h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+#tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.tag-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.delete-tag-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  margin-left: 0.4rem;
+  padding: 0;
+  line-height: 1;
+  font-weight: bold;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+.delete-tag-btn:hover {
+  opacity: 1;
+}
+.tag-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+#tag-input {
+  flex-grow: 1;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-bg-color);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+#add-tag-btn {
+  flex-shrink: 0;
+  padding: 0 1rem;
+  font-size: 1.2rem;
+}

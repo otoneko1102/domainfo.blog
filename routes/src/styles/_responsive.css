@@ -1,0 +1,33 @@
+@media (max-width: 768px) {
+  main {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+  }
+
+  .editor-main-container {
+    overflow-x: hidden;
+  }
+
+  .flex {
+    width: 200%;
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #edit,
+  #view {
+    width: 50%;
+  }
+
+  .flex.show-preview {
+    transform: translateX(-50%);
+  }
+
+  .view-toggle {
+    display: grid;
+  }
+}

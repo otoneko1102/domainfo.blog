@@ -1,0 +1,125 @@
+/*
+ * Prism.jsのカスタムテーマ
+ * ライト/ダークで共通の配色を使い、背景と文字色など見づらい部分のみを調整
+ */
+
+:root {
+  /* ======================================= */
+  /* --- 🎨 共通のシンタックスカラーを定義 --- */
+  /* ======================================= */
+  --prism-keyword: #c792ea; /* キーワード: 紫 */
+  --prism-string: #8dc26b; /* 文字列: 緑 */
+  --prism-function: #82aaff; /* 関数: 青 */
+  --prism-number: #f78c6c; /* 数字: オレンジ */
+  --prism-tag: #f07178; /* タグ・定数: 赤系 */
+  --prism-prop: #82aaff; /* プロパティ: 青 */
+  --prism-operator: #89ddff; /* 演算子: シアン */
+  --prism-var: #ffcb6b; /* 変数: 黄色系 */
+}
+
+/* ======================================= */
+/* --- ⚪ ライトテーマ用の設定 --- */
+/* ======================================= */
+:root,
+:root[data-theme="light"] {
+  --prism-background: #fafafa; /* 背景色: 明るいグレー */
+  --prism-color: #3c4352; /* 文字色: 暗いグレー */
+  --prism-comment: #a1a8b8; /* コメント: 薄いグレー */
+  --prism-punctuation: #7f8798; /* 句読点: グレー */
+}
+
+/* ======================================= */
+/* --- ⚫ ダークテーマ用の設定 --- */
+/* ======================================= */
+:root[data-theme="dark"] {
+  --prism-background: #242932; /* 背景色: 暗い青系グレー */
+  --prism-color: #d8dee9; /* 文字色: 明るいグレー */
+  --prism-comment: #6f788b; /* コメント: 暗めのグレー */
+  --prism-punctuation: #8f9aaa; /* 句読点: 薄いグレー */
+}
+
+/* --- 以下はトークンと変数を結びつける定義 (変更不要) --- */
+code[class*="language-"],
+pre[class*="language-"] {
+  color: var(--prism-color);
+  background: none;
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  font-size: 1em;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+pre[class*="language-"] {
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+  border-radius: 0.3em;
+  background: var(--prism-background);
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--prism-comment);
+}
+
+.token.punctuation {
+  color: var(--prism-punctuation);
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--prism-tag);
+}
+
+.token.boolean,
+.token.number {
+  color: var(--prism-number);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--prism-string);
+}
+
+.token.operator,
+.token.entity,
+.token.url {
+  color: var(--prism-operator);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: var(--prism-keyword);
+}
+
+.token.function,
+.token.class-name {
+  color: var(--prism-function);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: var(--prism-var);
+}

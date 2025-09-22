@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="stylesheet" href="./src/styles/main.css" />
     <title><%- serviceName %></title>
     <meta name="description" content="<%- serviceDescription %>" />
 
@@ -21,20 +21,6 @@
     <meta name="theme-color" content="#4A90E2" />
 
     <link rel="icon" href="<%- serviceIconImage %>" type="image/png">
-
-    <script>
-      // Security level
-      const isStrictSecurity = false; // Default: true
-      const dataStorage = isStrictSecurity ? sessionStorage : localStorage;
-      (function () {
-        const theme = dataStorage.getItem("theme");
-        const prefersDark =
-          window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const initialTheme = theme || (prefersDark ? "dark" : "light");
-        document.documentElement.setAttribute("data-theme", initialTheme);
-      })();
-    </script>
   </head>
   <body>
     <header>

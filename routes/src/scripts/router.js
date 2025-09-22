@@ -27,7 +27,7 @@ const handlePublicRoutes = async (path) => {
 };
 
 const router = async () => {
-  // ページ遷移時に古いイベントリスナーを削除
+  // ページ遷移時に古いイベントリスナーをクリーンアップ
   if (state.keydownHandler) {
     window.removeEventListener("keydown", state.keydownHandler);
     setState({ keydownHandler: null });
@@ -40,17 +40,15 @@ const router = async () => {
   const path = window.location.pathname;
   const loginModal = document.getElementById("login-modal");
 
-  // UIを初期状態にリセット
   document.getElementById("editor-menu-open-btn").classList.add("hidden");
   document.getElementById("editor-menu-container").classList.remove("is-open");
   document.getElementById("editor-menu-overlay").classList.add("hidden");
   contentArea.innerHTML = "";
 
-  // 管理者ページ（/a/）へのアクセス制御
   if (path.startsWith("/a")) {
     const authenticated = await checkAuth();
     if (authenticated) {
-      if (loginModal) loginModal.classList.add("hidden"); // モーダルを非表示に
+      if (loginModal) loginModal.classList.add("hidden");
       await handleAdminRoutes(path);
     } else {
       showLoginModal();
@@ -60,7 +58,6 @@ const router = async () => {
     await handlePublicRoutes(path);
   }
 
-  // 全ページ共通のUIを更新
   updateGlobalUI();
 };
 

@@ -1,15 +1,10 @@
+import "katex/dist/katex.min.css";
 import "xpdf-viewer";
 import router from "./router.js";
 import { initializeGlobalEventListeners } from "./ui/global/main.js";
-import {
-  isStrictSecurity,
-  dataStorage,
-  contentArea,
-  state,
-  setState,
-} from "./state.js";
+import { dataStorage } from "./state.js";
 
-// テーマ
+// テーマ設定のロジック
 (function () {
   const theme = dataStorage.getItem("theme");
   const prefersDark =

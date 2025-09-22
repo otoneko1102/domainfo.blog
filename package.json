@@ -25,6 +25,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
     "fs-extra": "^11.3.1",
+    "katex": "^0.16.22",
     "marked": "^16.2.0",
     "multer": "^2.0.2",
     "rss": "^1.2.2",

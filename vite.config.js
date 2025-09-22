@@ -38,6 +38,9 @@ export default defineConfig(({ mode }) => {
             if (/\.(a?png|jpe?g|gif|webp|mp3|m4a|mp4|mov|webm)$/.test(i.name)) {
               return "assets/img/[name][extname]";
             }
+            if (/\.(ttf|woff2?)$/.test(i.name)) {
+              return "assets/fonts/[name][extname]"
+            }
             return "assets/[hash][extname]"
           },
           manualChunks(id) {

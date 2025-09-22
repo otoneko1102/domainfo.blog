@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./src/styles/main.css" />
+
+    <script type="module" src="./src/scripts/config.js"></script>
+    <script type="module" src="./src/scripts/theme.js"></script>
+
     <title><%- serviceName %></title>
     <meta name="description" content="<%- serviceDescription %>" />
 
@@ -23,6 +27,10 @@
     <link rel="icon" href="<%- serviceIconImage %>" type="image/png">
   </head>
   <body>
+    <div id="loading-screen">
+      <div class="spinner"></div>
+    </div>
+
     <header>
       <div class="header-wrapper">
         <div class="header-left">
@@ -43,6 +51,9 @@
           >
             <span class="icon sun-icon"></span>
             <span class="icon moon-icon"></span>
+          </button>
+          <button id="clear-storage-btn" class="icon-btn" title="サイトのデータをリセット">
+            <span class="icon trash-icon"></span>
           </button>
         </div>
       </div>

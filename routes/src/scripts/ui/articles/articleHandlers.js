@@ -41,7 +41,6 @@ export const handleDeleteArticle = async (id, title) => {
     const result = await response.json();
     if (response.ok) {
       alert(result.message);
-      // 記事一覧を再描画
       await renderArticleList("admin", 1);
     } else {
       alert(`エラー: ${result.message}`);

@@ -1,6 +1,5 @@
 import { getAuthBody } from "../../auth.js";
 
-// ファイル削除処理
 const handleDeleteFile = async (id, filename) => {
   if (!confirm(`"${filename}" を削除しますか？`)) return;
 
@@ -13,7 +12,7 @@ const handleDeleteFile = async (id, filename) => {
     const result = await response.json();
     if (response.ok) {
       alert(result.message);
-      await renderImageGallery(id); // ギャラリーを再描画
+      await renderImageGallery(id);
     } else {
       alert(`エラー: ${result.message}`);
     }
@@ -22,7 +21,6 @@ const handleDeleteFile = async (id, filename) => {
   }
 };
 
-// 画像ギャラリーを描画
 export const renderImageGallery = async (id) => {
   const gallery = document.getElementById("image-gallery");
   const editor = document.getElementById("editor");
@@ -52,7 +50,6 @@ export const renderImageGallery = async (id) => {
     })
     .join("");
 
-  // サムネイルクリックでMarkdownを挿入
   gallery.querySelectorAll(".thumbnail img, .thumbnail a").forEach((item) => {
     item.addEventListener("click", (e) => {
       e.preventDefault();
@@ -68,7 +65,6 @@ export const renderImageGallery = async (id) => {
     });
   });
 
-  // 削除ボタンのイベント
   gallery.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -77,7 +73,6 @@ export const renderImageGallery = async (id) => {
   });
 };
 
-// ファイルアップロード機能の初期化
 export const initializeUploader = (id) => {
   const uploadBtn = document.getElementById("upload-btn");
   const fileInput = document.getElementById("file-input");
@@ -91,7 +86,6 @@ export const initializeUploader = (id) => {
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
     formData.append("filename", filenameInput.value);
-    // getAuthBodyはJSON用なので、FormData用にパスワードを直接追加
     formData.append(
       "password",
       localStorage.getItem("adminPassword") ||

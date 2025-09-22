@@ -4,6 +4,7 @@ import { syncPaneHeights } from "../../utils/helpers.js";
 import { renderImageGallery, initializeUploader } from "./fileManager.js";
 import { initializeTagManager } from "./tagManager.js";
 import { initializeCoreEditorEvents } from "./editorEvents.js";
+import Prism from "prismjs";
 
 export const renderEditorView = async (id) => {
   contentArea.innerHTML = `
@@ -36,6 +37,7 @@ export const renderEditorView = async (id) => {
     const view = document.getElementById("view");
     const editor = document.getElementById("editor");
     view.innerHTML = parseMarkdown(articleData.content || "");
+    Prism.highlightAll();
 
     initializeUploader(id);
     const tagManager = initializeTagManager(articleData.tags);
@@ -49,6 +51,7 @@ export const renderEditorView = async (id) => {
       }
       syncPaneHeights();
       setState({ hasUnsavedChanges: true });
+      Prism.highlightAll();
     });
 
     const beforeUnloadHandler = (e) => {

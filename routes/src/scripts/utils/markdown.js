@@ -1,6 +1,7 @@
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import katex from "katex";
+import Prism from "prismjs";
 
 const latexInline = {
   name: "latexInline",

@@ -27,7 +27,6 @@ const handlePublicRoutes = async (path) => {
 };
 
 const router = async () => {
-  // ページ遷移時に古いイベントリスナーをクリーンアップ
   if (state.keydownHandler) {
     window.removeEventListener("keydown", state.keydownHandler);
     setState({ keydownHandler: null });

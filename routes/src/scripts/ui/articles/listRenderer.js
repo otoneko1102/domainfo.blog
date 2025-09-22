@@ -6,16 +6,13 @@ const renderPagination = (mode, totalPages, currentPage) => {
   if (totalPages <= 1) return "";
   const basePath = mode === "admin" ? "/a" : "/";
   let html = "";
-  // Previous page link
   html +=
     currentPage > 1
       ? `<a href="${basePath}?page=${currentPage - 1}" class="page-link" data-page="${currentPage - 1}">&laquo; 前へ</a>`
       : `<span class="page-link disabled">&laquo; 前へ</span>`;
-  // Page number links
   for (let i = 1; i <= totalPages; i++) {
     html += `<a href="${basePath}?page=${i}" class="page-link ${i === currentPage ? "active" : ""}" data-page="${i}">${i}</a>`;
   }
-  // Next page link
   html +=
     currentPage < totalPages
       ? `<a href="${basePath}?page=${currentPage + 1}" class="page-link" data-page="${currentPage + 1}">次へ &raquo;</a>`

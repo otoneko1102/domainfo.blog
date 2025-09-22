@@ -2,7 +2,6 @@ import { state, setState } from "../../state.js";
 import { getAuthBody } from "../../auth.js";
 import router from "../../router.js";
 
-// 記事設定の変更（IDとタイトル）
 const handleSettings = async (oldId, oldTitle) => {
   const newId = prompt("新しい記事IDを入力してください:", oldId);
   if (!newId || !/^[a-z0-9-]+$/.test(newId)) {
@@ -31,7 +30,6 @@ const handleSettings = async (oldId, oldTitle) => {
   }
 };
 
-// コア機能（保存、公開、設定）のイベントリスナーを初期化
 export const initializeCoreEditorEvents = (id, articleData, getTags) => {
   const actionsDiv = document.querySelector(".editor-actions");
   let currentArticle = { ...articleData };
@@ -48,7 +46,6 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
       </button>
     `;
 
-    // 保存ボタン
     document.getElementById("save-btn").addEventListener("click", async (e) => {
       if (state.isSaving) return;
       setState({ isSaving: true });
@@ -58,7 +55,7 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
 
       const editor = document.getElementById("editor");
       const content = editor.value;
-      const tags = getTags(); // tagManagerから現在のタグを取得
+      const tags = getTags();
 
       try {
         await fetch(`/api/articles/${id}`, {
@@ -76,7 +73,6 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
       }
     });
 
-    // 公開/非公開ボタン
     document
       .getElementById("toggle-public-btn")
       .addEventListener("click", async () => {
@@ -87,12 +83,11 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
           body: JSON.stringify(getAuthBody({ public: newStatus })),
         });
         if (response.ok) {
-          currentArticle = await response.json(); // 最新の状態に更新
-          updateButtons(); // ボタンを再描画
+          currentArticle = await response.json();
+          updateButtons();
         }
       });
 
-    // 設定ボタン
     document
       .getElementById("settings-btn")
       .addEventListener("click", () =>
@@ -100,7 +95,6 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
       );
   };
 
-  // Ctrl(Cmd)+Sでの保存ショートカット
   const keydownHandler = (e) => {
     if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
       e.preventDefault();
@@ -108,7 +102,7 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
     }
   };
   window.addEventListener("keydown", keydownHandler);
-  setState({ keydownHandler }); // stateにハンドラを保存して後で削除できるようにする
+  setState({ keydownHandler });
 
-  updateButtons(); // 初期描画
+  updateButtons();
 };

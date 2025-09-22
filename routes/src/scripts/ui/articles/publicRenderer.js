@@ -1,5 +1,6 @@
 import { contentArea } from "../../state.js";
 import { parseMarkdown } from "../../utils/markdown.js";
+import Prism from "prismjs";
 
 export const renderPublicView = async (id) => {
   contentArea.innerHTML = "<p>読み込み中...</p>";
@@ -12,6 +13,7 @@ export const renderPublicView = async (id) => {
       <a href="/" class="back-to-list-link">&larr; 記事一覧に戻る</a>
       <div class="view-public">${parseMarkdown(data.content)}</div>
     `;
+    Prism.highlightAll();
 
     if (window.initializeXpdfViewers) {
       window.initializeXpdfViewers();

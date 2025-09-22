@@ -2,7 +2,6 @@ import { dataStorage, state } from "../../state.js";
 import router from "../../router.js";
 import { handleLogin } from "../../auth.js";
 
-// クリップボードへのコピー処理とUIフィードバック
 const copyToClipboard = (button, text, originalTitle) => {
   navigator.clipboard
     .writeText(text)
@@ -25,9 +24,7 @@ const copyToClipboard = (button, text, originalTitle) => {
     });
 };
 
-// 全ページ共通のイベントリスナーを初期化
 export const initializeGlobalEventListeners = () => {
-  // テーマ切り替え
   document.getElementById("theme-toggle-btn")?.addEventListener("click", () => {
     const currentTheme = document.documentElement.getAttribute("data-theme");
     const newTheme = currentTheme === "dark" ? "light" : "dark";
@@ -35,7 +32,6 @@ export const initializeGlobalEventListeners = () => {
     dataStorage.setItem("theme", newTheme);
   });
 
-  // エディタ用サイドメニューの開閉
   const menuContainer = document.getElementById("editor-menu-container");
   const menuOpenBtn = document.getElementById("editor-menu-open-btn");
   const menuOverlay = document.getElementById("editor-menu-overlay");
@@ -56,17 +52,14 @@ export const initializeGlobalEventListeners = () => {
     });
   }
 
-  // SPA内のリンク遷移をハンドル
   document.body.addEventListener("click", (e) => {
     const anchor = e.target.closest("a");
-    // 外部リンクやページ内リンク(#)は対象外
     if (
       anchor &&
       anchor.target !== "_blank" &&
       anchor.href.startsWith(window.location.origin)
     ) {
       e.preventDefault();
-      // 未保存の変更があるか確認
       if (
         state.hasUnsavedChanges &&
         !confirm(
@@ -80,7 +73,6 @@ export const initializeGlobalEventListeners = () => {
     }
   });
 
-  // ログインボタン
   document
     .getElementById("login-button")
     ?.addEventListener("click", handleLogin);
@@ -90,11 +82,9 @@ export const initializeGlobalEventListeners = () => {
       if (e.key === "Enter") handleLogin();
     });
 
-  // フッターの年表示
   const currentYearSpan = document.getElementById("current-year");
   if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
 
-  // URLコピーボタン
   document
     .getElementById("copy-url-btn")
     ?.addEventListener("click", (e) =>
@@ -105,7 +95,6 @@ export const initializeGlobalEventListeners = () => {
       ),
     );
 
-  // RSS Feedコピーボタン
   document
     .getElementById("copy-feed-btn")
     ?.addEventListener("click", (e) =>
@@ -115,4 +104,28 @@ export const initializeGlobalEventListeners = () => {
         "RSS FeedのURLをコピー",
       ),
     );
+
+  document
+    .getElementById("clear-storage-btn")
+    ?.addEventListener("click", () => {
+      if (
+        !confirm(
+          "ログイン情報を除くすべてのサイト設定（テーマなど）をリセットします。よろしいですか？",
+        )
+      ) {
+        return;
+      }
+
+      const adminPassword = dataStorage.getItem("adminPassword");
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      if (adminPassword) {
+        dataStorage.setItem("adminPassword", adminPassword);
+      }
+
+      alert("サイトデータをリセットしました。");
+      location.reload();
+    });
 };

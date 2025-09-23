@@ -1,11 +1,10 @@
-/* --- ロード画面のスタイル --- */
 #loading-screen {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  /* 常に黒い背景に設定 */
+
   background-color: #121212;
   z-index: 10000;
   display: flex;
@@ -19,13 +18,12 @@
 /* * [data-theme='dark'] #loading-screen のルールは不要なので削除します
  */
 
-/* スピナーのアニメーション */
 .spinner {
   width: 50px;
   height: 50px;
-  /* 背景が黒になるため、薄い白のボーダーに統一 */
+
   border: 5px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #4a90e2; /* スピナーの回転部分の色 */
+  border-top-color: #4a90e2;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -39,7 +37,6 @@
   }
 }
 
-/* 読み込み完了後にロード画面を非表示にするためのスタイル */
 body.loaded #loading-screen {
   opacity: 0;
   visibility: hidden;

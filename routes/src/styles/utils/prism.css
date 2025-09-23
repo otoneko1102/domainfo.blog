@@ -4,41 +4,31 @@
  */
 
 :root {
-  /* ======================================= */
-  /* --- 🎨 共通のシンタックスカラーを定義 --- */
-  /* ======================================= */
-  --prism-keyword: #c792ea; /* キーワード: 紫 */
-  --prism-string: #8dc26b; /* 文字列: 緑 */
-  --prism-function: #82aaff; /* 関数: 青 */
-  --prism-number: #f78c6c; /* 数字: オレンジ */
-  --prism-tag: #f07178; /* タグ・定数: 赤系 */
-  --prism-prop: #82aaff; /* プロパティ: 青 */
-  --prism-operator: #89ddff; /* 演算子: シアン */
-  --prism-var: #ffcb6b; /* 変数: 黄色系 */
+  --prism-keyword: #c792ea;
+  --prism-string: #8dc26b;
+  --prism-function: #82aaff;
+  --prism-number: #f78c6c;
+  --prism-tag: #f07178;
+  --prism-prop: #82aaff;
+  --prism-operator: #89ddff;
+  --prism-var: #ffcb6b;
 }
 
-/* ======================================= */
-/* --- ⚪ ライトテーマ用の設定 --- */
-/* ======================================= */
 :root,
 :root[data-theme="light"] {
-  --prism-background: #fafafa; /* 背景色: 明るいグレー */
-  --prism-color: #3c4352; /* 文字色: 暗いグレー */
-  --prism-comment: #a1a8b8; /* コメント: 薄いグレー */
-  --prism-punctuation: #7f8798; /* 句読点: グレー */
+  --prism-background: #fafafa;
+  --prism-color: #3c4352;
+  --prism-comment: #a1a8b8;
+  --prism-punctuation: #7f8798;
 }
 
-/* ======================================= */
-/* --- ⚫ ダークテーマ用の設定 --- */
-/* ======================================= */
 :root[data-theme="dark"] {
-  --prism-background: #242932; /* 背景色: 暗い青系グレー */
-  --prism-color: #d8dee9; /* 文字色: 明るいグレー */
-  --prism-comment: #6f788b; /* コメント: 暗めのグレー */
-  --prism-punctuation: #8f9aaa; /* 句読点: 薄いグレー */
+  --prism-background: #242932;
+  --prism-color: #d8dee9;
+  --prism-comment: #6f788b;
+  --prism-punctuation: #8f9aaa;
 }
 
-/* --- 以下はトークンと変数を結びつける定義 (変更不要) --- */
 code[class*="language-"],
 pre[class*="language-"] {
   color: var(--prism-color);

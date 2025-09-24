@@ -155,6 +155,10 @@ footer > span {
   -webkit-mask-image: url(/assets/trash.svg);
   mask-image: url(/assets/trash.svg);
 }
+.music-icon {
+  -webkit-mask-image: url(/assets/music.svg);
+  mask-image: url(/assets/music.svg);
+}
 .moon-icon {
   display: none;
 }

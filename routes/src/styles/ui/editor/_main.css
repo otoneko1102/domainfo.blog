@@ -148,23 +148,76 @@
 }
 .thumbnail {
   position: relative;
-}
-.thumbnail img {
   width: 100%;
   height: 80px;
-  object-fit: cover;
   border-radius: var(--border-radius);
-  cursor: pointer;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  cursor: pointer;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
-  display: block;
 }
-.thumbnail img:hover {
+.thumbnail:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 10px var(--shadow-color);
 }
+
+.thumbnail img,
+.thumbnail video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pdf-thumbnail {
+  background-color: #e4e4e4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  text-align: center;
+}
+html[data-theme="dark"] .pdf-thumbnail {
+  background-color: #333;
+}
+.pdf-icon {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #d33;
+}
+.pdf-name {
+  font-size: 0.7rem;
+  word-break: break-all;
+  line-height: 1.2;
+  margin-top: 4px;
+  color: var(--text-color);
+}
+
+.audio-thumbnail {
+  background-color: var(--surface-bg-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  text-align: center;
+}
+.audio-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--primary-color);
+}
+.audio-name {
+  font-size: 0.7rem;
+  word-break: break-all;
+  line-height: 1.2;
+  margin-top: 8px;
+  color: var(--text-color);
+}
+
 .delete-btn {
   position: absolute;
   top: 4px;
@@ -183,6 +236,7 @@
   line-height: 1;
   opacity: 0;
   transition: opacity 0.2s ease;
+  z-index: 2;
 }
 .thumbnail:hover .delete-btn {
   opacity: 1;

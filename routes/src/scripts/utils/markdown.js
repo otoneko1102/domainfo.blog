@@ -104,5 +104,13 @@ export const parseMarkdown = (markdownText) => {
     /<img src="([^"]+\.pdf)"[^>]*>/g,
     '<embed class="xpdf" data-pdf="$1" data-pdf-size="100%">',
   );
+  processedHtml = processedHtml.replace(
+    /<img src="([^"]+\.(mp4|webm|ogv|mov|avi|mpeg))" alt="([^"]*)"[^>]*>/gi,
+    '<video src="$1" alt="$3" controls playsinline style="max-width: 100%; border-radius: var(--border-radius);"></video>',
+  );
+  processedHtml = processedHtml.replace(
+    /<img src="([^"]+\.(mp3|weba|m4a|ogg|oga|opus|acc|mid|midi|wav))" alt="([^"]*)"[^>]*>/gi,
+    '<audio src="$1" controls preload="metadata"></audio>',
+  );
   return processedHtml;
 };

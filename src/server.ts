@@ -7,9 +7,21 @@ import * as cheerio from "cheerio";
 import multer from "multer";
 import crypto from "crypto";
 import sharp from "sharp";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegStatic from "ffmpeg-static";
+import { Readable } from "stream";
+import os from "os";
 import RSS from "rss";
 
+if (ffmpegStatic) {
+  ffmpeg.setFfmpegPath(ffmpegStatic);
+}
+
 // 型
+interface ArticleFile {
+  name: string;
+  type: string;
+}
 interface ArticleMetadata {
   title: string;
   public: boolean;
@@ -76,6 +88,26 @@ const readMetadata = async (): Promise<AllMetadata> => {
 };
 const writeMetadata = async (data: AllMetadata): Promise<void> => {
   await fs.writeJson(METADATA_PATH, data, { spaces: 2 });
+};
+
+// マニフェスト
+const getManifestPath = (articleId: string) =>
+  path.join(PAGES_PATH, "files", articleId, "manifest.json");
+const readManifest = async (articleId: string): Promise<ArticleFile[]> => {
+  const manifestPath = getManifestPath(articleId);
+  if (await fs.exists(manifestPath)) {
+    try {
+      return await fs.readJson(manifestPath);
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
+const writeManifest = async (articleId: string, data: ArticleFile[]) => {
+  const manifestPath = getManifestPath(articleId);
+  await fs.ensureDir(path.dirname(manifestPath));
+  await fs.writeJson(manifestPath, data, { spaces: 2 });
 };
 
 // 管理者認証ミドルウェア
@@ -182,13 +214,15 @@ api.get("/articles/:id", async (req: Request, res: Response) => {
 
 // 記事ファイル一覧取得
 api.get("/articles/:id/files", async (req, res) => {
-  const dirPath = path.join(PAGES_PATH, "files", req.params.id);
-  if (await fs.exists(dirPath)) {
-    const files = await fs.readdir(dirPath);
-    res.json(files.filter((f) => !f.startsWith(".")));
-  } else {
-    res.json([]);
-  }
+  // const dirPath = path.join(PAGES_PATH, "files", req.params.id);
+  // if (await fs.exists(dirPath)) {
+  //   const files = await fs.readdir(dirPath);
+  //   res.json(files.filter((f) => !f.startsWith(".")));
+  // } else {
+  //   res.json([]);
+  // }
+  const manifest = await readManifest(req.params.id);
+  res.json(manifest);
 });
 
 // ファイルアップロード
@@ -226,19 +260,105 @@ api.post(
         finalName = crypto.randomBytes(8).toString("hex");
       }
 
-      if (
-        [".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".png"].includes(
-          originalExt,
-        ) &&
-        ![".apng", ".gif"].includes(originalExt)
-      ) {
-        buffer = await sharp(req.file.buffer).png().toBuffer();
-        finalExt = ".png";
+      // if (
+      //   [".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".png"].includes(
+      //     originalExt,
+      //   ) &&
+      //   ![".apng", ".gif"].includes(originalExt)
+      // ) {
+      //   buffer = await sharp(req.file.buffer).png().toBuffer();
+      //   finalExt = ".png";
+      // }
+
+      const mimeType = req.file.mimetype;
+
+      if (mimeType.startsWith("image/")) {
+        if (mimeType !== "image/gif" && mimeType !== "image/apng") {
+          console.log("Converting image to PNG...");
+          buffer = await sharp(req.file.buffer).png().toBuffer();
+          finalExt = ".png";
+        }
+      } else if (mimeType.startsWith("video/")) {
+        console.log("Converting video to MP4...");
+        const tempInputPath = path.join(
+          os.tmpdir(),
+          `input_${Date.now()}${originalExt}`,
+        );
+        const tempOutputPath = path.join(
+          os.tmpdir(),
+          `output_${Date.now()}.mp4`,
+        );
+
+        await fs.writeFile(tempInputPath, req.file.buffer);
+
+        await new Promise<void>((resolve, reject) => {
+          ffmpeg(tempInputPath)
+            .toFormat("mp4")
+            .on("end", () => {
+              console.log("Video conversion finished.");
+              resolve();
+            })
+            .on("error", (err) => {
+              console.error("Video conversion error:", err);
+              reject(err);
+            })
+            .save(tempOutputPath);
+        });
+
+        buffer = await fs.readFile(tempOutputPath);
+        finalExt = ".mp4";
+
+        await fs.unlink(tempInputPath);
+        await fs.unlink(tempOutputPath);
+      } else if (mimeType.startsWith("audio/")) {
+        console.log("Converting audio to MP3...");
+        const tempInputPath = path.join(
+          os.tmpdir(),
+          `input_${Date.now()}${originalExt}`,
+        );
+        const tempOutputPath = path.join(
+          os.tmpdir(),
+          `output_${Date.now()}.mp3`,
+        );
+
+        await fs.writeFile(tempInputPath, req.file.buffer);
+
+        await new Promise<void>((resolve, reject) => {
+          ffmpeg(tempInputPath)
+            .toFormat("mp3")
+            .on("end", () => {
+              console.log("Audio conversion finished.");
+              resolve();
+            })
+            .on("error", (err) => {
+              console.error("Audio conversion error:", err);
+              reject(err);
+            })
+            .save(tempOutputPath);
+        });
+
+        buffer = await fs.readFile(tempOutputPath);
+        finalExt = ".mp3";
+
+        await fs.unlink(tempInputPath);
+        await fs.unlink(tempOutputPath);
       }
 
       const finalFilename = `${finalName}${finalExt}`;
       const filePath = path.join(dir, finalFilename);
       await fs.writeFile(filePath, buffer);
+
+      const manifest = await readManifest(id);
+      let newMimeType = mimeType;
+      if (finalExt === ".png") newMimeType = "image/png";
+      if (finalExt === ".mp4") newMimeType = "video/mp4";
+      if (finalExt === ".mp3") newMimeType = "audio/mpeg";
+
+      manifest.push({
+        name: finalFilename,
+        type: newMimeType,
+      });
+      await writeManifest(id, manifest);
 
       res.json({
         message: "ファイルが正常にアップロードされました。",
@@ -262,6 +382,11 @@ api.delete(
     try {
       if (await fs.exists(filePath)) {
         await fs.unlink(filePath);
+
+        let manifest = await readManifest(id);
+        manifest = manifest.filter((file) => file.name !== filename);
+        await writeManifest(id, manifest);
+
         res.json({ message: "ファイルが削除されました。" });
       } else {
         res.status(404).json({ message: "ファイルが見つかりません。" });

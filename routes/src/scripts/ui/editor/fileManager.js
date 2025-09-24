@@ -35,25 +35,56 @@ export const renderImageGallery = async (id) => {
   }
 
   gallery.innerHTML = files
-    .map((filename) => {
-      const filePath = `/files/${id}/${filename}`;
-      const isPdf = filename.toLowerCase().endsWith(".pdf");
-      return `
-      <div class="thumbnail ${isPdf ? "pdf-thumbnail" : ""}">
-        ${
-          isPdf
-            ? `<a href="${filePath}" title="${filename}をクリックしてMarkdownを挿入" data-filepath="${filePath}">${filename}</a>`
-            : `<img src="${filePath}" alt="${filename}" title="クリックしてMarkdownを挿入" data-filepath="${filePath}" />`
-        }
-        <button class="delete-btn" data-filename="${filename}" title="削除する">×</button>
-      </div>`;
+    .map((file) => {
+      const filePath = `/files/${id}/${file.name}`;
+      let thumbnailHtml = "";
+
+      // MIMEタイプで判定
+      if (file.type === "application/pdf") {
+        thumbnailHtml = `
+        <div class="thumbnail pdf-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
+          <span class="pdf-icon">PDF</span>
+          <span class="pdf-name">${file.name}</span>
+        </div>`;
+      } else if (file.type.startsWith("video/")) {
+        thumbnailHtml = `
+        <div class="thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
+          <video src="${filePath}" autoplay muted loop playsinline preload="metadata"></video>
+        </div>`;
+      } else if (file.type.startsWith("image/")) {
+        thumbnailHtml = `
+        <div class="thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
+          <img src="${filePath}" alt="${file.name}" />
+        </div>`;
+      } else if (file.type.startsWith("audio/")) {
+        thumbnailHtml = `
+        <div class="thumbnail audio-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="クリックしてMarkdownを挿入">
+          <span class="audio-icon music-icon"></span>
+          <span class="audio-name">${file.name}</span>
+        </div>`;
+      } else {
+        // その他のファイル形式 (念のため)
+        thumbnailHtml = `
+        <div class="thumbnail other-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
+          <span>${file.name}</span>
+        </div>`;
+      }
+
+      return `${thumbnailHtml.replace("</div>", `<button class="delete-btn" data-filename="${file.name}" title="削除する">×</button></div>`)}`;
     })
     .join("");
 
-  gallery.querySelectorAll(".thumbnail img, .thumbnail a").forEach((item) => {
+  // ギャラリーの各アイテムにクリックイベントを設定
+  gallery.querySelectorAll(".thumbnail").forEach((item) => {
     item.addEventListener("click", (e) => {
+      // 削除ボタンのクリックは除外
+      if (e.target.classList.contains("delete-btn")) return;
+
       e.preventDefault();
-      const markdownToInsert = `\n![${item.alt || item.textContent}](${item.dataset.filepath})\n`;
+      const filename = item.dataset.filename;
+      const filepath = item.dataset.filepath;
+      const markdownToInsert = `\n![${filename}](${filepath})\n`;
+
       const currentPos = editor.selectionStart;
       editor.value =
         editor.value.slice(0, currentPos) +
@@ -61,10 +92,13 @@ export const renderImageGallery = async (id) => {
         editor.value.slice(currentPos);
       editor.focus();
       editor.selectionEnd = currentPos + markdownToInsert.length;
+
+      // 変更があったことを伝える
       editor.dispatchEvent(new Event("input"));
     });
   });
 
+  // 削除ボタンのイベント
   gallery.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -92,7 +126,11 @@ export const initializeUploader = (id) => {
         sessionStorage.getItem("adminPassword"),
     );
 
+    const originalText = uploadBtn.textContent;
+
     try {
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = "アップロード中...";
       const response = await fetch(`/api/articles/${id}/files`, {
         method: "POST",
         body: formData,
@@ -108,6 +146,9 @@ export const initializeUploader = (id) => {
       }
     } catch (err) {
       alert("アップロードに失敗しました。");
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = originalText;
     }
   });
 };

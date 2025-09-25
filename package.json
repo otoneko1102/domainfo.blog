@@ -34,7 +34,7 @@
     "prismjs": "^1.30.0",
     "rss": "^1.2.2",
     "sharp": "^0.34.3",
-    "xpdf-viewer": "^3.1.4"
+    "xpdf-viewer": "^3.1.5"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",

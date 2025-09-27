@@ -6,6 +6,23 @@ export const getAuthBody = (body = {}) => {
   return { ...body, password };
 };
 
+export const fetchWithAuth = (url) => {
+  const password = dataStorage.getItem("adminPassword");
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (password) {
+    headers["X-Admin-Password"] = password;
+  }
+
+  return fetch(url, {
+    method: "GET",
+    headers: headers,
+  });
+};
+
 export const checkAuth = async () => {
   const storedPassword = dataStorage.getItem("adminPassword");
   if (!storedPassword) return false;

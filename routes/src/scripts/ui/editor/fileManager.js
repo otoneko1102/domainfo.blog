@@ -1,4 +1,5 @@
-import { getAuthBody } from "../../auth.js";
+import { getAuthBody, fetchWithAuth } from "../../auth.js";
+import { loadPrivateMedia } from "../../utils/mediaLoader.js";
 
 const handleDeleteFile = async (id, filename) => {
   if (!confirm(`"${filename}" を削除しますか？`)) return;
@@ -26,7 +27,7 @@ export const renderImageGallery = async (id) => {
   const editor = document.getElementById("editor");
   if (!gallery || !editor) return;
 
-  const res = await fetch(`/api/articles/${id}/files`);
+  const res = await fetchWithAuth(`/api/articles/${id}/files`);
   const files = await res.json();
 
   if (files.length === 0) {
@@ -39,7 +40,6 @@ export const renderImageGallery = async (id) => {
       const filePath = `/files/${id}/${file.name}`;
       let thumbnailHtml = "";
 
-      // MIMEタイプで判定
       if (file.type === "application/pdf") {
         thumbnailHtml = `
         <div class="thumbnail pdf-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
@@ -49,12 +49,12 @@ export const renderImageGallery = async (id) => {
       } else if (file.type.startsWith("video/")) {
         thumbnailHtml = `
         <div class="thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
-          <video src="${filePath}" autoplay muted loop playsinline preload="metadata"></video>
+          <video data-src="${filePath}" src="" autoplay muted loop playsinline preload="metadata"></video>
         </div>`;
       } else if (file.type.startsWith("image/")) {
         thumbnailHtml = `
         <div class="thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
-          <img src="${filePath}" alt="${file.name}" />
+          <img data-src="${filePath}" src="" alt="${file.name}" />
         </div>`;
       } else if (file.type.startsWith("audio/")) {
         thumbnailHtml = `
@@ -63,7 +63,6 @@ export const renderImageGallery = async (id) => {
           <span class="audio-name">${file.name}</span>
         </div>`;
       } else {
-        // その他のファイル形式 (念のため)
         thumbnailHtml = `
         <div class="thumbnail other-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
           <span>${file.name}</span>
@@ -74,10 +73,10 @@ export const renderImageGallery = async (id) => {
     })
     .join("");
 
-  // ギャラリーの各アイテムにクリックイベントを設定
+  await loadPrivateMedia(gallery);
+
   gallery.querySelectorAll(".thumbnail").forEach((item) => {
     item.addEventListener("click", (e) => {
-      // 削除ボタンのクリックは除外
       if (e.target.classList.contains("delete-btn")) return;
 
       e.preventDefault();
@@ -93,12 +92,10 @@ export const renderImageGallery = async (id) => {
       editor.focus();
       editor.selectionEnd = currentPos + markdownToInsert.length;
 
-      // 変更があったことを伝える
       editor.dispatchEvent(new Event("input"));
     });
   });
 
-  // 削除ボタンのイベント
   gallery.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();

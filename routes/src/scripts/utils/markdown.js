@@ -94,7 +94,7 @@ marked.use({
 
 export const parseMarkdown = (markdownText) => {
   const rawHtml = marked.parse(markdownText || "");
-  const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+  const sanitizedHtml = DOMPurify.sanitize(rawHtml, { ADD_TAGS: ["embed"] });
   let processedHtml = sanitizedHtml;
   processedHtml = processedHtml.replace(
     /<a href="http/g,
@@ -112,5 +112,11 @@ export const parseMarkdown = (markdownText) => {
     /<img src="([^"]+\.(mp3|weba|m4a|ogg|oga|opus|acc|mid|midi|wav))" alt="([^"]*)"[^>]*>/gi,
     '<audio src="$1" controls preload="metadata"></audio>',
   );
+
+  processedHtml = processedHtml.replace(
+    /<(img|video|audio)([^>]*?) src="(\/files\/[^"]+)"/g,
+    '<$1$2 data-src="$3" src=""',
+  );
+
   return processedHtml;
 };

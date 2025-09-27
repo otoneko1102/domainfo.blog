@@ -1,9 +1,11 @@
 import { contentArea, state, setState } from "../../state.js";
+import { fetchWithAuth } from "../../auth.js";
 import { parseMarkdown } from "../../utils/markdown.js";
 import { syncPaneHeights } from "../../utils/helpers.js";
 import { renderImageGallery, initializeUploader } from "./fileManager.js";
 import { initializeTagManager } from "./tagManager.js";
 import { initializeCoreEditorEvents } from "./editorEvents.js";
+import { loadPrivateMedia } from "../../utils/mediaLoader.js";
 import Prism from "prismjs";
 
 export const renderEditorView = async (id) => {
@@ -28,15 +30,16 @@ export const renderEditorView = async (id) => {
     </div>`;
 
   try {
-    const response = await fetch(`/api/articles/${id}`);
+    const response = await fetchWithAuth(`/api/articles/${id}`);
     if (!response.ok) throw new Error("記事の読み込みに失敗しました。");
-    const articleData = await response.json();
+    const { content, meta: articleData } = await response.json();
 
     document.getElementById("edit").innerHTML =
-      `<textarea id="editor">${articleData.content || ""}</textarea>`;
+      `<textarea id="editor">${content || ""}</textarea>`;
     const view = document.getElementById("view");
     const editor = document.getElementById("editor");
-    view.innerHTML = parseMarkdown(articleData.content || "");
+    view.innerHTML = parseMarkdown(content || "");
+    await loadPrivateMedia(view, { showLoadingScreen: true });
     Prism.highlightAll();
 
     initializeUploader(id);
@@ -44,8 +47,9 @@ export const renderEditorView = async (id) => {
     initializeCoreEditorEvents(id, articleData, tagManager.getTags);
     await renderImageGallery(id);
 
-    editor.addEventListener("input", () => {
+    editor.addEventListener("input", async () => {
       view.innerHTML = parseMarkdown(editor.value);
+      await loadPrivateMedia(view);
       if (window.initializeXpdfViewers) {
         setTimeout(() => window.initializeXpdfViewers(), 0);
       }

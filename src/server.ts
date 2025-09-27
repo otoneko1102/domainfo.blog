@@ -75,7 +75,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(limiter);
 app.use(express.static(path.join(__dirname, "../lib/components")));
 app.use("/src", express.static(path.join(__dirname, "../routes/src")));
-app.use("/files", express.static(path.join(__dirname, "../lib/pages/files")));
+// app.use("/files", express.static(path.join(__dirname, "../lib/pages/files")));
 
 // 読み書き
 const readMetadata = async (): Promise<AllMetadata> => {
@@ -200,16 +200,86 @@ api.get("/articles", async (req: Request, res: Response) => {
   });
 });
 
+app.get("/files/:id/:filename", async (req: Request, res: Response) => {
+  const { id, filename } = req.params;
+
+  if (filename.includes("..")) {
+    return res.status(400).send("Invalid filename");
+  }
+
+  try {
+    const metadata = await readMetadata();
+    const articleData = metadata[id];
+
+    if (!articleData) {
+      return res.status(404).send("File not found");
+    }
+
+    // 記事が公開されていれば、誰でもアクセス可能
+    if (articleData.public) {
+      const filePath = path.join(PAGES_PATH, "files", id, filename);
+      if (await fs.exists(filePath)) return res.sendFile(filePath);
+    }
+
+    const providedPassword = req.headers["x-admin-password"];
+    if (providedPassword === ADMIN_PASSWORD) {
+      const filePath = path.join(PAGES_PATH, "files", id, filename);
+      if (await fs.exists(filePath)) return res.sendFile(filePath);
+    }
+
+    return res.status(404).send("File not found");
+  } catch (err) {
+    console.error(`Error serving file ${filename} for article ${id}:`, err);
+    return res.status(500).send("Internal Server Error");
+  }
+});
+
 // 記事個別内容取得
 api.get("/articles/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
-  const mdPath = path.join(PAGES_PATH, `${id}.md`);
-  if (await fs.exists(mdPath)) {
-    const content = await fs.readFile(mdPath, "utf-8");
-    res.json({ content });
-  } else {
-    res.status(404).json({ message: "Article content not found." });
+
+  const metadata = await readMetadata();
+  const articleData = metadata[id];
+
+  if (!articleData) {
+    return res.status(404).json({ message: "Article not found." });
   }
+
+  const isPublic = articleData.public;
+  const isAdmin = req.headers["x-admin-password"] === ADMIN_PASSWORD;
+
+  if (isPublic || isAdmin) {
+    const mdPath = path.join(PAGES_PATH, `${id}.md`);
+    if (await fs.exists(mdPath)) {
+      const content = await fs.readFile(mdPath, "utf-8");
+      return res.json({ content, meta: articleData });
+    } else {
+      return res.status(404).json({ message: "Article content not found." });
+    }
+  }
+
+  if (articleData.public) {
+    const mdPath = path.join(PAGES_PATH, `${id}.md`);
+    if (await fs.exists(mdPath)) {
+      const content = await fs.readFile(mdPath, "utf-8");
+      return res.json({ content });
+    } else {
+      return res.status(404).json({ message: "Article content not found." });
+    }
+  }
+
+  const providedPassword = req.headers["x-admin-password"];
+  if (providedPassword === ADMIN_PASSWORD) {
+    const mdPath = path.join(PAGES_PATH, `${id}.md`);
+    if (await fs.exists(mdPath)) {
+      const content = await fs.readFile(mdPath, "utf-8");
+      return res.json({ content });
+    } else {
+      return res.status(404).json({ message: "Article content not found." });
+    }
+  }
+
+  return res.status(404).json({ message: "Article not found." });
 });
 
 // 記事ファイル一覧取得
@@ -221,8 +291,27 @@ api.get("/articles/:id/files", async (req, res) => {
   // } else {
   //   res.json([]);
   // }
-  const manifest = await readManifest(req.params.id);
-  res.json(manifest);
+  const { id } = req.params;
+
+  const metadata = await readMetadata();
+  const articleData = metadata[id];
+
+  if (!articleData) {
+    return res.status(404).json({ message: "Article not found." });
+  }
+
+  if (articleData.public) {
+    const manifest = await readManifest(id);
+    return res.json(manifest);
+  }
+
+  const providedPassword = req.headers["x-admin-password"];
+  if (providedPassword === ADMIN_PASSWORD) {
+    const manifest = await readManifest(id);
+    return res.json(manifest);
+  }
+
+  return res.status(404).json({ message: "Article not found." });
 });
 
 // ファイルアップロード
@@ -561,7 +650,8 @@ const serveArticlePage = async (req: Request, res: Response) => {
   const metadata = await readMetadata();
   const articleMeta = metadata[id];
   if (!articleMeta || !articleMeta.public) {
-    return res.sendFile(HTML_TEMPLATE_PATH);
+    // return res.sendFile(HTML_TEMPLATE_PATH);
+    return serveApp(req, res);
   }
   try {
     const mdPath = path.join(PAGES_PATH, `${id}.md`);
@@ -587,7 +677,8 @@ const serveArticlePage = async (req: Request, res: Response) => {
     res.send($.html());
   } catch (err) {
     console.error(`Error serving article page for ID: ${id}`, err);
-    res.sendFile(HTML_TEMPLATE_PATH);
+    // res.sendFile(HTML_TEMPLATE_PATH);
+    return serveApp(req, res);
   }
 };
 

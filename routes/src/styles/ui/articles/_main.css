@@ -193,6 +193,11 @@ html[data-theme="dark"] .article-delete-btn:hover {
 .view-public {
   padding: 1.5rem;
 }
+.view-public {
+  max-width: 750px; /* 記事本文の最大幅 */
+  margin-left: auto; /* 中央揃え */
+  margin-right: auto; /* 中央揃え */
+}
 #view img,
 .view-public img,
 #view video,

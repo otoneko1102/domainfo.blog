@@ -39,37 +39,7 @@ const latexBlock = {
   },
 };
 
-const detailsBlock = {
-  name: "detailsBlock",
-  level: "block",
-  start(src) {
-    return src.match(/^\^\^\^/)?.index;
-  },
-  tokenizer(src) {
-    const rule = /^\^\^\^ *(.*)\n([\s\S]+?)\n\^\^\^\n?/;
-    const match = rule.exec(src);
-    if (match) {
-      const summary = match[1].trim() || "詳細";
-      const body = match[2].trim();
-      return {
-        type: "detailsBlock",
-        raw: match[0],
-        summary,
-        body,
-        tokens: this.lexer.blockTokens(body),
-      };
-    }
-  },
-  renderer(token) {
-    const summaryHtml = this.parser.parseInline(
-      this.lexer.inlineTokens(token.summary),
-    );
-    const bodyHtml = this.parser.parse(token.tokens);
-    return `<details><summary>${summaryHtml}</summary>${bodyHtml}</details>`;
-  },
-};
-
-const underlineExtension = {
+const underline = {
   name: "underline",
   level: "inline",
   tokenizer(src) {
@@ -90,7 +60,7 @@ const underlineExtension = {
 };
 
 marked.use({
-  extensions: [underlineExtension, latexInline, latexBlock, detailsBlock],
+  extensions: [underline, latexInline, latexBlock],
   breaks: true,
 });
 

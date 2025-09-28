@@ -1,6 +1,5 @@
 import { contentArea } from "../../state.js";
 import { parseMarkdown } from "../../utils/markdown.js";
-// import { loadPrivateMedia } from "../../utils/mediaLoader.js";
 import Prism from "prismjs";
 
 export const renderPublicView = async (id) => {
@@ -11,7 +10,7 @@ export const renderPublicView = async (id) => {
 
     const data = await response.json();
 
-    let htmlContent = parseMarkdown(data.content);
+    let htmlContent = await parseMarkdown(data.content);
     htmlContent = htmlContent.replace(
       /data-src="(\/files\/[^"]+)"/g,
       'src="$1"',
@@ -25,12 +24,7 @@ export const renderPublicView = async (id) => {
       <a href="/" class="back-to-list-link">&larr; 記事一覧に戻る</a>
       <div class="view-public">${htmlContent}</div>
     `;
-    // await loadPrivateMedia(contentArea, { showLoadingScreen: true });
     Prism.highlightAll();
-
-    if (window.initializeXpdfViewers) {
-      window.initializeXpdfViewers();
-    }
   } catch (error) {
     contentArea.innerHTML = `<p>${error.message}</p>`;
   }

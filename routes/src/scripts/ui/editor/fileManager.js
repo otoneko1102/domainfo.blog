@@ -1,5 +1,4 @@
 import { getAuthBody, fetchWithAuth } from "../../auth.js";
-import { loadPrivateMedia } from "../../utils/mediaLoader.js";
 
 const handleDeleteFile = async (id, filename) => {
   if (!confirm(`"${filename}" を削除しますか？`)) return;
@@ -72,8 +71,6 @@ export const renderImageGallery = async (id) => {
       return `${thumbnailHtml.replace("</div>", `<button class="delete-btn" data-filename="${file.name}" title="削除する">×</button></div>`)}`;
     })
     .join("");
-
-  await loadPrivateMedia(gallery);
 
   gallery.querySelectorAll(".thumbnail").forEach((item) => {
     item.addEventListener("click", (e) => {

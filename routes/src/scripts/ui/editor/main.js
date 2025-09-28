@@ -5,7 +5,6 @@ import { syncPaneHeights } from "../../utils/helpers.js";
 import { renderImageGallery, initializeUploader } from "./fileManager.js";
 import { initializeTagManager } from "./tagManager.js";
 import { initializeCoreEditorEvents } from "./editorEvents.js";
-import { loadPrivateMedia } from "../../utils/mediaLoader.js";
 import Prism from "prismjs";
 
 export const renderEditorView = async (id) => {
@@ -38,8 +37,7 @@ export const renderEditorView = async (id) => {
       `<textarea id="editor">${content || ""}</textarea>`;
     const view = document.getElementById("view");
     const editor = document.getElementById("editor");
-    view.innerHTML = parseMarkdown(content || "");
-    await loadPrivateMedia(view, { showLoadingScreen: true });
+    view.innerHTML = await parseMarkdown(content || "");
     Prism.highlightAll();
 
     initializeUploader(id);
@@ -48,8 +46,7 @@ export const renderEditorView = async (id) => {
     await renderImageGallery(id);
 
     editor.addEventListener("input", async () => {
-      view.innerHTML = parseMarkdown(editor.value);
-      await loadPrivateMedia(view);
+      view.innerHTML = await parseMarkdown(editor.value);
       if (window.initializeXpdfViewers) {
         setTimeout(() => window.initializeXpdfViewers(), 0);
       }

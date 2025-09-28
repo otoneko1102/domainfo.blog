@@ -2,6 +2,8 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import Prism from "prismjs";
+import { dataStorage } from "../state";
+import { sha256 } from "./crypto";
 
 const latexInline = {
   name: "latexInline",
@@ -92,31 +94,40 @@ marked.use({
   breaks: true,
 });
 
-export const parseMarkdown = (markdownText) => {
+export const parseMarkdown = async (markdownText) => {
   const rawHtml = marked.parse(markdownText || "");
-  const sanitizedHtml = DOMPurify.sanitize(rawHtml, { ADD_TAGS: ["embed"] });
+  const sanitizedHtml = DOMPurify.sanitize(rawHtml, {
+    ADD_TAGS: ["embed"],
+  });
   let processedHtml = sanitizedHtml;
+
   processedHtml = processedHtml.replace(
-    /<a href="http/g,
-    '<a target="_blank" rel="noopener noreferrer nofollow" href="http',
+    /<a href="(https?:\/\/[^"]+)"/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer nofollow"',
   );
   processedHtml = processedHtml.replace(
     /<img src="([^"]+\.pdf)"[^>]*>/g,
     '<embed class="xpdf" data-pdf="$1" data-pdf-size="100%">',
   );
   processedHtml = processedHtml.replace(
-    /<img src="([^"]+\.(mp4|webm|ogv|mov|avi|mpeg))" alt="([^"]*)"[^>]*>/gi,
+    /<img src="([^"]+\.(mp4|webm|ogv|mov))" alt="([^"]*)"[^>]*>/gi,
     '<video src="$1" alt="$3" controls playsinline style="max-width: 100%; border-radius: var(--border-radius);"></video>',
   );
   processedHtml = processedHtml.replace(
-    /<img src="([^"]+\.(mp3|weba|m4a|ogg|oga|opus|acc|mid|midi|wav))" alt="([^"]*)"[^>]*>/gi,
+    /<img src="([^"]+\.(mp3|weba|m4a|ogg))" alt="([^"]*)"[^>]*>/gi,
     '<audio src="$1" controls preload="metadata"></audio>',
   );
 
-  processedHtml = processedHtml.replace(
-    /<(img|video|audio)([^>]*?) src="(\/files\/[^"]+)"/g,
-    '<$1$2 data-src="$3" src=""',
-  );
+  if (window.location.pathname.startsWith("/a/")) {
+    const password = dataStorage.getItem("adminPassword");
+    if (password) {
+      const hashedPassword = await sha256(password);
+      processedHtml = processedHtml.replace(
+        /(src|data-pdf)="(\/files\/[^"]+)"/g,
+        `$1="$2?password=${hashedPassword}"`,
+      );
+    }
+  }
 
   return processedHtml;
 };

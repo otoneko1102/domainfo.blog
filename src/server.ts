@@ -9,7 +9,6 @@ import crypto from "crypto";
 import sharp from "sharp";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
-import { Readable } from "stream";
 import os from "os";
 import RSS from "rss";
 
@@ -202,6 +201,7 @@ api.get("/articles", async (req: Request, res: Response) => {
 
 app.get("/files/:id/:filename", async (req: Request, res: Response) => {
   const { id, filename } = req.params;
+  const passwordQuery = req.query?.password as string | null | undefined;
 
   if (filename.includes("..")) {
     return res.status(400).send("Invalid filename");
@@ -215,16 +215,25 @@ app.get("/files/:id/:filename", async (req: Request, res: Response) => {
       return res.status(404).send("File not found");
     }
 
-    // 記事が公開されていれば、誰でもアクセス可能
+    let isAuthorized = false;
+
     if (articleData.public) {
-      const filePath = path.join(PAGES_PATH, "files", id, filename);
-      if (await fs.exists(filePath)) return res.sendFile(filePath);
+      isAuthorized = true;
+    } else if (passwordQuery && ADMIN_PASSWORD) {
+      const serverHash = crypto
+        .createHash("sha256")
+        .update(ADMIN_PASSWORD)
+        .digest("hex");
+      if (passwordQuery === serverHash) {
+        isAuthorized = true;
+      }
     }
 
-    const providedPassword = req.headers["x-admin-password"];
-    if (providedPassword === ADMIN_PASSWORD) {
+    if (isAuthorized) {
       const filePath = path.join(PAGES_PATH, "files", id, filename);
-      if (await fs.exists(filePath)) return res.sendFile(filePath);
+      if (await fs.exists(filePath)) {
+        return res.sendFile(filePath);
+      }
     }
 
     return res.status(404).send("File not found");

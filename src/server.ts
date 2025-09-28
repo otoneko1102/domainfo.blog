@@ -277,16 +277,16 @@ api.get("/articles/:id", async (req: Request, res: Response) => {
     }
   }
 
-  const providedPassword = req.headers["x-admin-password"];
-  if (providedPassword === ADMIN_PASSWORD) {
-    const mdPath = path.join(PAGES_PATH, `${id}.md`);
-    if (await fs.exists(mdPath)) {
-      const content = await fs.readFile(mdPath, "utf-8");
-      return res.json({ content });
-    } else {
-      return res.status(404).json({ message: "Article content not found." });
-    }
-  }
+  // const providedPassword = req.headers["x-admin-password"];
+  // if (providedPassword === ADMIN_PASSWORD) {
+  //   const mdPath = path.join(PAGES_PATH, `${id}.md`);
+  //   if (await fs.exists(mdPath)) {
+  //     const content = await fs.readFile(mdPath, "utf-8");
+  //     return res.json({ content });
+  //   } else {
+  //     return res.status(404).json({ message: "Article content not found." });
+  //   }
+  // }
 
   return res.status(404).json({ message: "Article not found." });
 });

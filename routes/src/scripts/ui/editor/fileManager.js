@@ -1,4 +1,6 @@
 import { getAuthBody, fetchWithAuth } from "../../auth.js";
+import { dataStorage } from "../../state.js";
+import { sha256 } from "../../utils/crypto.js";
 
 const handleDeleteFile = async (id, filename) => {
   if (!confirm(`"${filename}" を削除しますか？`)) return;
@@ -26,6 +28,12 @@ export const renderImageGallery = async (id) => {
   const editor = document.getElementById("editor");
   if (!gallery || !editor) return;
 
+  const password = dataStorage.getItem("adminPassword");
+  if (password) {
+    gallery.innerHTML = "<p>ファイルを表示できません。</p>";
+  }
+
+  const hashedPassword = await sha256(password);
   const res = await fetchWithAuth(`/api/articles/${id}/files`);
   const files = await res.json();
 
@@ -36,34 +44,36 @@ export const renderImageGallery = async (id) => {
 
   gallery.innerHTML = files
     .map((file) => {
-      const filePath = `/files/${id}/${file.name}`;
+      // const filePath = `/files/${id}/${file.name}`;
+      const cleanFilePath = `/files/${id}/${file.name}`;
+      const authFilePath = `${cleanFilePath}?password=${hashedPassword}`;
       let thumbnailHtml = "";
 
       if (file.type === "application/pdf") {
         thumbnailHtml = `
-        <div class="thumbnail pdf-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
+        <div class="thumbnail pdf-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
           <span class="pdf-icon">PDF</span>
           <span class="pdf-name">${file.name}</span>
         </div>`;
       } else if (file.type.startsWith("video/")) {
         thumbnailHtml = `
-        <div class="thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
-          <video data-src="${filePath}" src="" autoplay muted loop playsinline preload="metadata"></video>
+        <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <video src="${authFilePath}" autoplay muted loop playsinline preload="metadata"></video>
         </div>`;
       } else if (file.type.startsWith("image/")) {
         thumbnailHtml = `
-        <div class="thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
-          <img data-src="${filePath}" src="" alt="${file.name}" />
+        <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <img src="${authFilePath}" alt="${file.name}" />
         </div>`;
       } else if (file.type.startsWith("audio/")) {
         thumbnailHtml = `
-        <div class="thumbnail audio-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="クリックしてMarkdownを挿入">
+        <div class="thumbnail audio-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="クリックしてMarkdownを挿入">
           <span class="audio-icon music-icon"></span>
           <span class="audio-name">${file.name}</span>
         </div>`;
       } else {
         thumbnailHtml = `
-        <div class="thumbnail other-thumbnail" data-filepath="${filePath}" data-filename="${file.name}" title="${file.name}">
+        <div class="thumbnail other-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
           <span>${file.name}</span>
         </div>`;
       }
@@ -79,7 +89,7 @@ export const renderImageGallery = async (id) => {
       e.preventDefault();
       const filename = item.dataset.filename;
       const filepath = item.dataset.filepath;
-      const markdownToInsert = `\n![${filename}](${filepath})\n`;
+      const markdownToInsert = `![${filename}](${filepath})\n`;
 
       const currentPos = editor.selectionStart;
       editor.value =
@@ -105,6 +115,15 @@ export const initializeUploader = (id) => {
   const uploadBtn = document.getElementById("upload-btn");
   const fileInput = document.getElementById("file-input");
   const filenameInput = document.getElementById("filename-input");
+  const fileNameDisplay = document.getElementById("file-name-display");
+
+  fileInput?.addEventListener("change", () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      fileNameDisplay.textContent = fileInput.files[0].name;
+    } else {
+      fileNameDisplay.textContent = "選択されていません";
+    }
+  });
 
   uploadBtn?.addEventListener("click", async () => {
     if (!fileInput.files[0]) {

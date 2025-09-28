@@ -19,13 +19,40 @@ export const renderEditorView = async (id) => {
 
   const menuContainer = document.getElementById("editor-menu-container");
   menuContainer.innerHTML = `
-    <div class="editor-menu-header"><h3>設定とファイル</h3><button id="editor-menu-close-btn" class="icon-btn" title="閉じる"><span class="icon close-icon"></span></button></div>
+    <div class="editor-menu-header">
+      <h3>設定とファイル</h3>
+      <button id="editor-menu-close-btn" class="icon-btn" title="閉じる">
+        <span class="icon close-icon"></span>
+      </button>
+    </div>
     <div class="editor-menu-content">
-      <div class="view-toggle"><button id="show-editor-btn" class="button view-toggle-btn active">編集</button><button id="show-preview-btn" class="button view-toggle-btn">プレビュー</button></div>
+      <div class="view-toggle">
+        <button id="show-editor-btn" class="button view-toggle-btn active">編集</button>
+        <button id="show-preview-btn" class="button view-toggle-btn">プレビュー</button>
+      </div>
       <div class="editor-actions"></div>
-      <div class="tags-container"><h4>タグ編集</h4><div id="tags-list"></div><div class="tag-input-group"><input type="text" id="tag-input" placeholder="新しいタグを追加" /><button id="add-tag-btn" class="button">+</button></div></div>
-      <div class="upload-container"><h4>ファイル管理</h4><input type="file" id="file-input" /><input type="text" id="filename-input" placeholder="保存ファイル名 (拡張子不要)" autocomplete="off" /><button id="upload-btn" class="button">アップロード</button></div>
-      <h4>クリックして挿入</h4><div id="image-gallery" class="image-gallery"><p>画像を読み込み中...</p></div>
+      <div class="tags-container">
+        <h4>タグ編集</h4>
+        <div id="tags-list"></div>
+        <div class="tag-input-group">
+          <input type="text" id="tag-input" placeholder="新しいタグを追加" />
+          <button id="add-tag-btn" class="button">+</button>
+        </div>
+      </div>
+      <div class="upload-container">
+        <h4>ファイル管理</h4>
+        <div class="file-input-wrapper">
+          <input type="file" id="file-input" class="file-input-hidden" />
+          <label for="file-input" class="button">ファイルを選択</label>
+          <span id="file-name-display">選択されていません</span>
+        </div>
+        <input type="text" id="filename-input" placeholder="保存ファイル名 (拡張子不要)" autocomplete="off" />
+        <button id="upload-btn" class="button">アップロード</button>
+      </div>
+      <h4>クリックして挿入</h4>
+      <div id="image-gallery" class="image-gallery">
+        <p>画像を読み込み中...</p>
+      </div>
     </div>`;
 
   try {

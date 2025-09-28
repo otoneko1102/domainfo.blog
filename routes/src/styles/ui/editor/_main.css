@@ -122,6 +122,28 @@
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
 }
+.upload-container button {
+  width: 100%;
+}
+.file-input-hidden {
+  display: none;
+}
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+}
+.file-input-wrapper .button {
+  flex-shrink: 0;
+}
+#file-name-display {
+  font-size: 0.8rem;
+  color: var(--subtle-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .upload-container h4 {
   margin-top: 0;
   margin-bottom: 1rem;

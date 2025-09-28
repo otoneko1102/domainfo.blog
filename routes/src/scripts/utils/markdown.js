@@ -59,15 +59,47 @@ const underline = {
   },
 };
 
+const details = {
+  name: "details",
+  level: "block",
+  start(src) {
+    return src.match(/^\^\^\^/)?.index;
+  },
+  tokenizer(src) {
+    const rule = /^\^\^\^(.*?)\n([\s\S]+?)\^\^\^/;
+    const match = rule.exec(src);
+
+    if (match) {
+      const summaryText = match[1].trim();
+      const detailsText = match[2].trim();
+
+      const token = {
+        type: "details",
+        raw: match[0],
+        summary: summaryText,
+        tokens: this.lexer.blockTokens(detailsText, []),
+      };
+      return token;
+    }
+  },
+  renderer(token) {
+    const summary = this.parser.parseInline(
+      token.summary ? [{ type: "text", text: token.summary }] : [],
+    );
+    const details = this.parser.parse(token.tokens);
+    return `<details><summary>${summary}</summary>${details}</details>`;
+  },
+};
+
 marked.use({
-  extensions: [underline, latexInline, latexBlock],
+  extensions: [latexInline, latexBlock, underline, details],
   breaks: true,
 });
 
 export const parseMarkdown = async (markdownText) => {
   const rawHtml = marked.parse(markdownText || "");
   const sanitizedHtml = DOMPurify.sanitize(rawHtml, {
-    ADD_TAGS: ["embed"],
+    ADD_TAGS: ["embed", "details", "summary"],
   });
   let processedHtml = sanitizedHtml;
 

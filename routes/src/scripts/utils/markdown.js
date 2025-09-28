@@ -112,11 +112,11 @@ export const parseMarkdown = async (markdownText) => {
     '<embed class="xpdf" data-pdf="$1" data-pdf-size="100%">',
   );
   processedHtml = processedHtml.replace(
-    /<img src="([^"]+\.(mp4|webm|ogv|mov))" alt="([^"]*)"[^>]*>/gi,
+    /<img src="([^"]+\.(mp4|mov|webm|ogv|mov|qt|avi|flv|mpe?g|mkv|m2ts|wmv|asf|vob))" alt="([^"]*)"[^>]*>/gi,
     '<video src="$1" alt="$3" controls playsinline style="max-width: 100%; border-radius: var(--border-radius);"></video>',
   );
   processedHtml = processedHtml.replace(
-    /<img src="([^"]+\.(mp3|weba|m4a|ogg))" alt="([^"]*)"[^>]*>/gi,
+    /<img src="([^"]+\.(mp3|wav|weba|m4a|oga|ogg|opus|aac|midi?|rmi?|aiff|flac|alac|wma))" alt="([^"]*)"[^>]*>/gi,
     '<audio src="$1" controls preload="metadata"></audio>',
   );
 

@@ -67,7 +67,7 @@ export const renderImageGallery = async (id) => {
         </div>`;
       } else if (file.type.startsWith("audio/")) {
         thumbnailHtml = `
-        <div class="thumbnail audio-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="クリックしてMarkdownを挿入">
+        <div class="thumbnail audio-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
           <span class="audio-icon music-icon"></span>
           <span class="audio-name">${file.name}</span>
         </div>`;

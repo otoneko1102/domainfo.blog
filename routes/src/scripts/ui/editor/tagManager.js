@@ -9,7 +9,10 @@ export const initializeTagManager = (initialTags = []) => {
     tagsListDiv.innerHTML = currentTags
       .map(
         (tag, index) =>
-          `<div class="tag-item"><span>${tag}</span><button class="delete-tag-btn" data-index="${index}">×</button></div>`,
+          `<div class="tag-item">
+            <span>${tag}</span>
+            <button class="delete-tag-btn" data-index="${index}">×</button>
+          </div>`,
       )
       .join("");
 

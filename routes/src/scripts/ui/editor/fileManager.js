@@ -46,7 +46,7 @@ export const renderImageGallery = async (id) => {
     .map((file) => {
       // const filePath = `/files/${id}/${file.name}`;
       const cleanFilePath = `/files/${id}/${file.name}`;
-      const authFilePath = `${cleanFilePath}?password=${hashedPassword}`;
+      const authFilePath = `${cleanFilePath}?key=${hashedPassword}`;
       let thumbnailHtml = "";
 
       if (file.type === "application/pdf") {

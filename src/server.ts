@@ -201,7 +201,7 @@ api.get("/articles", async (req: Request, res: Response) => {
 
 app.get("/files/:id/:filename", async (req: Request, res: Response) => {
   const { id, filename } = req.params;
-  const passwordQuery = req.query?.password as string | null | undefined;
+  const passwordQuery = req.query?.key as string | null | undefined;
 
   if (filename.includes("..")) {
     return res.status(400).send("Invalid filename");

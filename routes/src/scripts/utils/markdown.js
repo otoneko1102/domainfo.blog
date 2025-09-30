@@ -113,11 +113,16 @@ export const parseMarkdown = async (markdownText) => {
   );
   processedHtml = processedHtml.replace(
     /<img src="([^"]+\.(mp4|mov|webm|ogv|mov|qt|avi|flv|mpe?g|mkv|m2ts|wmv|asf|vob))" alt="([^"]*)"[^>]*>/gi,
-    '<video src="$1" alt="$3" controls playsinline style="max-width: 100%; border-radius: var(--border-radius);"></video>',
+    '<video src="$1" alt="$3" controls playsinline style="max-width: 100%; border-radius: var(--border-radius);" controlsList="nodownload" oncontextmenu="return false;"></video>',
   );
   processedHtml = processedHtml.replace(
     /<img src="([^"]+\.(mp3|wav|weba|m4a|oga|ogg|opus|aac|midi?|rmi?|aiff|flac|alac|wma))" alt="([^"]*)"[^>]*>/gi,
-    '<audio src="$1" controls preload="metadata"></audio>',
+    '<audio src="$1" controls preload="metadata" controlsList="nodownload" oncontextmenu="return false;"></audio>',
+  );
+
+  processedHtml = processedHtml.replace(
+    /<img/gi,
+    '<img oncontextmenu="return false;"',
   );
 
   if (window.location.pathname.startsWith("/a/")) {
@@ -126,7 +131,7 @@ export const parseMarkdown = async (markdownText) => {
       const hashedPassword = await sha256(password);
       processedHtml = processedHtml.replace(
         /(src|data-pdf)="(\/files\/[^"]+)"/g,
-        `$1="$2?password=${hashedPassword}"`,
+        `$1="$2?key=${hashedPassword}"`,
       );
     }
   }

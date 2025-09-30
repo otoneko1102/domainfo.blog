@@ -125,14 +125,33 @@ export const parseMarkdown = async (markdownText) => {
     '<img oncontextmenu="return false;"',
   );
 
-  if (window.location.pathname.startsWith("/a/")) {
+  const currentPath = window.location.pathname;
+  if (currentPath.startsWith("/a/")) {
     const password = dataStorage.getItem("adminPassword");
-    if (password) {
-      const hashedPassword = await sha256(password);
-      processedHtml = processedHtml.replace(
-        /(src|data-pdf)="(\/files\/[^"]+)"/g,
-        `$1="$2?key=${hashedPassword}"`,
-      );
+    const parts = currentPath.split("/").filter((p) => p !== "");
+    if (password && parts.length > 1) {
+      const articleId = parts[1];
+
+      const urlRegex = /(src|data-pdf)="(\/files\/[^"]+)"/g;
+      const matches = [...processedHtml.matchAll(urlRegex)];
+
+      const hashPromises = matches.map((match) => {
+        const url = match[2];
+        const filename = url.substring(url.lastIndexOf("/") + 1);
+        const baseToHash = `${password}${articleId}${filename}`;
+        return sha256(baseToHash);
+      });
+      const hashes = await Promise.all(hashPromises);
+
+      matches.forEach((match, index) => {
+        const originalAttribute = match[0];
+        const url = match[2];
+        const newAttribute = originalAttribute.replace(
+          url,
+          `${url}?key=${hashes[index]}`,
+        );
+        processedHtml = processedHtml.replace(originalAttribute, newAttribute);
+      });
     }
   }
 

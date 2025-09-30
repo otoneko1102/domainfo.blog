@@ -29,11 +29,11 @@ export const renderImageGallery = async (id) => {
   if (!gallery || !editor) return;
 
   const password = dataStorage.getItem("adminPassword");
-  if (password) {
+  if (!password) {
     gallery.innerHTML = "<p>ファイルを表示できません。</p>";
+    return;
   }
 
-  const hashedPassword = await sha256(password);
   const res = await fetchWithAuth(`/api/articles/${id}/files`);
   const files = await res.json();
 
@@ -42,11 +42,16 @@ export const renderImageGallery = async (id) => {
     return;
   }
 
+  const hashPromises = files.map((file) => {
+    const baseToHash = `${password}${id}${file.name}`;
+    return sha256(baseToHash);
+  });
+  const hashes = await Promise.all(hashPromises);
+
   gallery.innerHTML = files
-    .map((file) => {
-      // const filePath = `/files/${id}/${file.name}`;
+    .map((file, index) => {
       const cleanFilePath = `/files/${id}/${file.name}`;
-      const authFilePath = `${cleanFilePath}?key=${hashedPassword}`;
+      const authFilePath = `${cleanFilePath}?key=${hashes[index]}`;
       let thumbnailHtml = "";
 
       if (file.type === "application/pdf") {
@@ -133,11 +138,7 @@ export const initializeUploader = (id) => {
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
     formData.append("filename", filenameInput.value);
-    formData.append(
-      "password",
-      localStorage.getItem("adminPassword") ||
-        sessionStorage.getItem("adminPassword"),
-    );
+    formData.append("password", dataStorage.getItem("adminPassword"));
 
     const originalText = uploadBtn.textContent;
 
@@ -153,6 +154,7 @@ export const initializeUploader = (id) => {
         alert(result.message);
         fileInput.value = "";
         filenameInput.value = "";
+        fileNameDisplay.textContent = "選択されていません";
         await renderImageGallery(id);
       } else {
         alert(`エラー: ${result.message}`);

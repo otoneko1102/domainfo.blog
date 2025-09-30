@@ -220,9 +220,10 @@ app.get("/files/:id/:filename", async (req: Request, res: Response) => {
     if (articleData.public) {
       isAuthorized = true;
     } else if (passwordQuery && ADMIN_PASSWORD) {
-      const serverHash = crypto
+      const base: string = `${ADMIN_PASSWORD}${id}${filename}`;
+      const serverHash: string = crypto
         .createHash("sha256")
-        .update(ADMIN_PASSWORD)
+        .update(base)
         .digest("hex");
       if (passwordQuery === serverHash) {
         isAuthorized = true;

@@ -249,6 +249,13 @@ html[data-theme="dark"] .article-delete-btn:hover {
 #view code,
 .view-public code {
   font-family: var(--monospace-font-family);
+  padding: 0.3em;
+  border-radius: 0.3em;
+  background-color: var(--code-bg-color);
+}
+#view pre code,
+.view-public pre code {
+  background-color: inherit;
 }
 #view blockquote,
 .view-public blockquote {

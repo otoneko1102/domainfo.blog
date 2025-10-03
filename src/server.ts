@@ -616,9 +616,30 @@ api.put(
     await writeMetadata(metadata);
 
     if (oldId !== newId) {
-      const oldPath = path.join(PAGES_PATH, `${oldId}.md`);
-      const newPath = path.join(PAGES_PATH, `${newId}.md`);
-      await fs.rename(oldPath, newPath);
+      const oldMdPath = path.join(PAGES_PATH, `${oldId}.md`);
+      const newMdPath = path.join(PAGES_PATH, `${newId}.md`);
+      // await fs.rename(oldPath, newPath);
+      if (await fs.exists(oldMdPath)) {
+        const markdownContent = await fs.readFile(oldMdPath, "utf-8");
+        const searchRegex = new RegExp(
+          `(\\!\\[[^\\]]*\\]\\(\\/files\\/)${oldId}(\\/[^)]*\\))`,
+          "g",
+        );
+        const replacePattern = `$1${newId}$2`;
+        const updatedContent = markdownContent.replace(
+          searchRegex,
+          replacePattern,
+        );
+
+        await fs.rename(oldMdPath, newMdPath);
+        await fs.writeFile(newMdPath, updatedContent, "utf-8");
+      }
+
+      const oldFilesPath = path.join(PAGES_PATH, "files", oldId);
+      const newFilesPath = path.join(PAGES_PATH, "files", newId);
+      if (await fs.exists(oldFilesPath)) {
+        await fs.rename(oldFilesPath, newFilesPath);
+      }
     }
     res.json({ message: "設定を更新しました。", newId: newId });
   },

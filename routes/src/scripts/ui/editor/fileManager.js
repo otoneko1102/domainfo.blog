@@ -60,7 +60,16 @@ export const renderImageGallery = async (id) => {
           <span class="pdf-icon">PDF</span>
           <span class="pdf-name">${file.name}</span>
         </div>`;
-      } else if (file.type.startsWith("video/")) {
+      } else if (
+        file.type.startsWith("video/") ||
+        file.type.startsWith("application/mp4")
+      ) {
+        /*
+        thumbnailHtml = `
+        <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <video src="${authFilePath}" autoplay muted loop playsinline preload="metadata"></video>
+        </div>`;
+        */
         thumbnailHtml = `
         <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
           <video src="${authFilePath}" autoplay muted loop playsinline preload="metadata"></video>
@@ -86,6 +95,17 @@ export const renderImageGallery = async (id) => {
       return `${thumbnailHtml.replace("</div>", `<button class="delete-btn" data-filename="${file.name}" title="削除する">×</button></div>`)}`;
     })
     .join("");
+
+  const videos = gallery.querySelectorAll("video");
+  videos.forEach((video) => {
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        console.error("Video autoplay was prevented:", error);
+      });
+    }
+  });
 
   gallery.querySelectorAll(".thumbnail").forEach((item) => {
     item.addEventListener("click", (e) => {

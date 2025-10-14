@@ -52,17 +52,19 @@ export const initializeCoreEditorEvents = (id, articleData, getTags) => {
       <div class="buttons">
         <button id="save-btn" class="button">保存</button>
         <button id="settings-btn" class="button">記事設定</button>
-        <button id="toggle-public-btn" class="button ${currentArticle.public ? "public" : "private"}">
-          ${publicButtonText}
-        </button>
-        <br />
-        <button id="toggle-hidden-btn" class="button ${currentArticle.hidden ? "hidden" : "visible"}">
-          ${hiddenButtonText}
-        </button>
-        <br />
-        <button id="toggle-pinned-btn" class="button ${currentArticle.pinned ? "pinned" : "unpinned"}">
-          ${pinnedButtonText}
-        </button>
+        <div class="buttons-block">
+          <button id="toggle-public-btn" class="button ${currentArticle.public ? "public" : "private"}">
+            ${publicButtonText}
+          </button>
+          <br />
+          <button id="toggle-hidden-btn" class="button ${currentArticle.hidden ? "hidden" : "visible"}">
+            ${hiddenButtonText}
+          </button>
+          <br />
+          <button id="toggle-pinned-btn" class="button ${currentArticle.pinned ? "pinned" : "unpinned"}">
+            ${pinnedButtonText}
+          </button>
+        </div>
       </div>
       <br />
       <div class="date-editor">

@@ -90,6 +90,13 @@
   flex-wrap: wrap;
   gap: 0.8rem;
 }
+.editor-actions .buttons .buttons-block {
+  display: block;
+}
+.editor-actions .buttons .buttons-block button {
+  width: 100%;
+  margin-bottom: 0.8rem;
+}
 .view-toggle {
   display: none;
   width: 100%;

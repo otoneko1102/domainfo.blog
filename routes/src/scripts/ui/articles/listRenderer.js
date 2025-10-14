@@ -118,21 +118,13 @@ export const renderArticleList = async (mode, page = 1) => {
             }<h2>${article.title}</h2></a>
             <div class="article-meta">
               <div class="article-dates">
-                <span>投稿日: <time datetime="${
-                  article.createdAt
-                }">${createdDate}</time></span>
-                ${
-                  isUpdated
-                    ? `<span>最終更新日: <time datetime="${article.updatedAt}">${updatedDate}</time></span>`
-                    : ""
-                }
+                <span>投稿日: <time datetime="${article.createdAt}">${createdDate}</time></span>
+                <span>更新日: ${isUpdated ? `<time datetime="${article.updatedAt}">${updatedDate}</time>` : "---"}</span>
               </div>
               <div class="article-meta-right">
                 ${
                   mode === "admin"
-                    ? `<span class="status ${
-                        article.public ? "public" : "private"
-                      }">${article.public ? "公開" : "非公開"}</span>`
+                    ? `<span class="status ${article.public ? "public" : "private"}">${article.public ? "公開" : "非公開"}</span>`
                     : ""
                 }
                 ${

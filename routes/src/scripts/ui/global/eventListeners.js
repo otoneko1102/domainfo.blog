@@ -1,4 +1,4 @@
-import { dataStorage, state } from "../../state.js";
+import { dataStorage, setState, state } from "../../state.js";
 import router from "../../router.js";
 import { handleLogin } from "../../auth.js";
 
@@ -68,6 +68,7 @@ export const initializeGlobalEventListeners = () => {
       ) {
         return;
       }
+      setState({ hasUnsavedChanges: false });
       history.pushState(null, "", anchor.href);
       router();
     }

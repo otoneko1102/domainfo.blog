@@ -51,6 +51,76 @@
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
+
+.article-card.pinned {
+  border: 1px solid var(--primary-color);
+}
+.article-title.pinned,
+.article-title.hidden-article {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.article-title.pinned h2,
+.article-title.hidden-article h2 {
+  margin: 0;
+}
+.pinned-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: var(--primary-color);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-image: url(/assets/pinned.svg);
+  mask-image: url(/assets/pinned.svg);
+}
+.hidden-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: var(--text-color);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-image: url(/assets/hidden.svg);
+  mask-image: url(/assets/hidden.svg);
+}
+
+.admin-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+#show-hidden-checkbox {
+  width: 1.1em;
+  height: 1.1em;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+  vertical-align: middle;
+}
+.checkbox-container label {
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+  color: var(--subtle-text-color);
+}
+
 .article-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 15px var(--shadow-color);

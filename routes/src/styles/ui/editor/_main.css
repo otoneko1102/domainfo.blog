@@ -85,7 +85,7 @@
   overflow-y: auto;
   flex-grow: 1;
 }
-.editor-actions {
+.editor-actions .buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
@@ -112,6 +112,26 @@
   background-color: var(--surface-bg-color);
   color: var(--text-color);
   box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.date-editor {
+  margin-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-editor label {
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.date-editor input[type="date"] {
+  padding: 0.5em;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--surface-bg-color);
+  color: var(--text-color);
 }
 
 .upload-container {

@@ -1,12 +1,15 @@
 import { contentArea } from "../../state.js";
 import { parseMarkdown } from "../../utils/markdown.js";
+import { renderNotFoundView } from "../global/errorViews.js";
 import Prism from "prismjs";
 
 export const renderPublicView = async (id) => {
   contentArea.innerHTML = "<p>読み込み中...</p>";
   try {
     const response = await fetch(`/api/articles/${id}`);
-    if (!response.ok) throw new Error("記事の読み込みに失敗しました。");
+    if (!response.ok) {
+      return await renderNotFoundView("記事の読み込みに失敗しました。");
+    }
 
     const data = await response.json();
 
@@ -25,7 +28,10 @@ export const renderPublicView = async (id) => {
       <div class="view-public">${htmlContent}</div>
     `;
     Prism.highlightAll();
-  } catch (error) {
-    contentArea.innerHTML = `<p>${error.message}</p>`;
+    if (window.initializeXpdfViewers) {
+      setTimeout(() => window.initializeXpdfViewers(), 0);
+    }
+  } catch (err) {
+    contentArea.innerHTML = `<p>${err.message}</p>`;
   }
 };

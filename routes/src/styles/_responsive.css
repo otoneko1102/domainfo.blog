@@ -30,4 +30,21 @@
   .view-toggle {
     display: grid;
   }
+
+  .static-page-container {
+    padding: 1.5rem;
+    margin: 1rem auto;
+  }
+
+  .packages-list {
+    columns: 1;
+    -webkit-columns: 1;
+  }
+
+  .static-page-container h1 {
+    font-size: 1.8rem;
+  }
+  .static-page-container h2 {
+    font-size: 1.3rem;
+  }
 }

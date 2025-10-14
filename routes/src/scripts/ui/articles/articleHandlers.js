@@ -4,9 +4,9 @@ import { renderArticleList } from "./listRenderer.js";
 
 export const handleNewArticle = async () => {
   const id = prompt(
-    "新しい記事のIDを入力してください (小文字英数、ハイフンのみ)",
+    "新しい記事のIDを入力してください (小文字英数、ハイフン、アンダースコアのみ):",
   );
-  if (!id || !/^[a-z0-9-]+$/.test(id)) {
+  if (!id || !/^[a-z0-9-_]+$/.test(id)) {
     if (id !== null) alert("無効なIDです。");
     return;
   }

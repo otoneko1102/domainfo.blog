@@ -2,6 +2,7 @@ import { contentArea, state, setState } from "../../state.js";
 import { fetchWithAuth } from "../../auth.js";
 import { parseMarkdown } from "../../utils/markdown.js";
 import { syncPaneHeights } from "../../utils/helpers.js";
+import { renderNotFoundView } from "../global/errorViews.js";
 import { renderImageGallery, initializeUploader } from "./fileManager.js";
 import { initializeTagManager } from "./tagManager.js";
 import { initializeCoreEditorEvents } from "./editorEvents.js";
@@ -57,7 +58,9 @@ export const renderEditorView = async (id) => {
 
   try {
     const response = await fetchWithAuth(`/api/articles/${id}`);
-    if (!response.ok) throw new Error("記事の読み込みに失敗しました。");
+    if (!response.ok) {
+      return await renderNotFoundView("記事の読み込みに失敗しました。");
+    }
     const { content, meta: articleData } = await response.json();
 
     document.getElementById("edit").innerHTML =
@@ -120,7 +123,7 @@ export const renderEditorView = async (id) => {
     if (window.initializeXpdfViewers) {
       setTimeout(() => window.initializeXpdfViewers(), 0);
     }
-  } catch (error) {
-    contentArea.innerHTML = `<p>${error.message}</p>`;
+  } catch (err) {
+    contentArea.innerHTML = `<p>${err.message}</p>`;
   }
 };

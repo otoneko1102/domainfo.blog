@@ -68,8 +68,8 @@ export const handleLogin = async () => {
       loginError.textContent = "パスワードが違います。";
       passwordInput.value = "";
     }
-  } catch (error) {
+  } catch (err) {
     loginError.textContent = "認証中にエラーが発生しました。";
-    console.error("Login failed:", error);
+    console.error("Login failed:", err);
   }
 };

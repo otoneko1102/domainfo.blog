@@ -24,6 +24,8 @@ interface ArticleFile {
 interface ArticleMetadata {
   title: string;
   public: boolean;
+  hidden: boolean;
+  pinned: boolean;
   createdAt: string | null;
   updatedAt: string | null;
   tags: string[];
@@ -41,6 +43,7 @@ const BASE_URL: string = process.env?.BASE_URL || `http://localhost:${PORT}`;
 
 const METADATA_PATH = path.join(__dirname, "../lib/metadata.json");
 const PAGES_PATH = path.join(__dirname, "../lib/pages");
+const CREDITS_PATH = path.join(__dirname, "../lib/CREDITS.md");
 const HTML_TEMPLATE_PATH = path.join(__dirname, "../lib/components/index.html");
 
 // レートリミット
@@ -97,7 +100,7 @@ const readManifest = async (articleId: string): Promise<ArticleFile[]> => {
   if (await fs.exists(manifestPath)) {
     try {
       return await fs.readJson(manifestPath);
-    } catch (e) {
+    } catch (err) {
       return [];
     }
   }
@@ -146,6 +149,7 @@ api.get("/articles", async (req: Request, res: Response) => {
   const pageSize = 20;
   const sortKey = (req.query.sortKey as string) || "createdAt";
   const sortOrder = (req.query.sortOrder as string) || "desc";
+  const range = (req.query.range as string) || "notHidden";
 
   const metadata = await readMetadata();
   let allArticles = Object.entries(metadata).map(([id, meta]) => ({
@@ -155,8 +159,10 @@ api.get("/articles", async (req: Request, res: Response) => {
 
   if (view !== "admin") {
     allArticles = allArticles.filter(
-      (article) => article.public && article.createdAt,
-    ); // 公開済みかつ日付のあるもののみ
+      (article) => article.public && article.createdAt && !article.hidden,
+    ); // 公開済みかつ日付のあるもの、非表示でないもののみ
+  } else if (range !== "all") {
+    allArticles = allArticles.filter((article) => !article.hidden);
   }
   if (searchTerm) {
     allArticles = allArticles.filter(
@@ -170,6 +176,10 @@ api.get("/articles", async (req: Request, res: Response) => {
 
   // ソート処理
   allArticles.sort((a, b) => {
+    const pinnedCompare = (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+    if (pinnedCompare !== 0) {
+      return pinnedCompare;
+    }
     let valA, valB;
     if (sortKey === "createdAt" || sortKey === "updatedAt") {
       // nullの場合は0として扱うことで、エラーを回避し、日付がないものを最後尾にする
@@ -505,7 +515,7 @@ api.post(
   adminAuthMiddleware,
   async (req: Request, res: Response) => {
     const { id, title } = req.body;
-    if (!id || !title || !/^[a-z0-9-]+$/.test(id)) {
+    if (!id || !title || !/^[a-z0-9-_]+$/.test(id)) {
       return res.status(400).json({ message: "Invalid ID or title." });
     }
     const metadata = await readMetadata();
@@ -517,6 +527,8 @@ api.post(
     metadata[id] = {
       title,
       public: false,
+      hidden: false,
+      pinned: false,
       createdAt: null, // now
       updatedAt: null, // now
       tags: [],
@@ -559,24 +571,61 @@ api.patch(
   adminAuthMiddleware,
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { public: isPublic } = req.body;
+    const { public: isPublic, hidden: isHidden, pinned: isPinned } = req.body;
     const metadata = await readMetadata();
     if (metadata[id]) {
-      const wasPublic = metadata[id].public;
-      metadata[id].public = isPublic;
+      if (typeof isPublic !== "undefined") {
+        const wasPublic = metadata[id].public;
+        metadata[id].public = isPublic;
 
-      const now = new Date().toISOString();
-      // 初めて公開する場合
-      if (isPublic && !wasPublic && !metadata[id].createdAt) {
-        metadata[id].createdAt = now;
-        metadata[id].updatedAt = now;
+        const now = new Date().toISOString();
+        // 初めて公開する場合
+        if (isPublic && !wasPublic && !metadata[id].createdAt) {
+          metadata[id].createdAt = now;
+          metadata[id].updatedAt = now;
+        }
+        // 公開済み記事を更新する場合
+        else if (isPublic && metadata[id].createdAt) {
+          metadata[id].updatedAt = now;
+        }
+        // 非公開にする場合は日付を更新しない
       }
-      // 公開済み記事を更新する場合
-      else if (isPublic && metadata[id].createdAt) {
-        metadata[id].updatedAt = now;
-      }
-      // 非公開にする場合は日付を更新しない
 
+      if (typeof isHidden !== "undefined") {
+        metadata[id].hidden = isHidden;
+      }
+
+      if (typeof isPinned !== "undefined") {
+        metadata[id].pinned = isPinned;
+      }
+
+      await writeMetadata(metadata);
+      res.json(metadata[id]);
+    } else {
+      res.status(404).json({ message: "Article not found." });
+    }
+  },
+);
+
+api.patch(
+  "/articles/:id/date",
+  adminAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { createdAt: newDate } = req.body;
+
+    if (!newDate || isNaN(new Date(newDate).getTime())) {
+      return res.status(400).json({ message: "Invalid date." });
+    }
+
+    const metadata = await readMetadata();
+    if (metadata[id]) {
+      const date = new Date(newDate);
+      date.setUTCHours(0, 0, 0, 0);
+      metadata[id].createdAt = date.toISOString();
+      if (!metadata[id].public) {
+        metadata[id].updatedAt = date.toISOString();
+      }
       await writeMetadata(metadata);
       res.json(metadata[id]);
     } else {
@@ -593,7 +642,7 @@ api.put(
     const { id: oldId } = req.params;
     const { newId, newTitle } = req.body;
 
-    if (!newId || !newTitle || !/^[a-z0-9-]+$/.test(newId)) {
+    if (!newId || !newTitle || !/^[a-z0-9-_]+$/.test(newId)) {
       return res.status(400).json({ message: "入力データが無効です。" });
     }
 
@@ -673,6 +722,17 @@ api.delete("/articles/:id", adminAuthMiddleware, async (req, res) => {
   }
 });
 
+api.get("/packages", (req: Request, res: Response) => {
+  const pkgPath = path.join(__dirname, "../package.json");
+  const pkg = fs.readJsonSync(pkgPath);
+  const dependencies = Object.keys(pkg.dependencies || {});
+  const devDependencies = Object.keys(pkg.devDependencies || {});
+  res.json({
+    dependencies,
+    devDependencies,
+  });
+});
+
 app.use("/api", api);
 
 // ページ配信
@@ -705,9 +765,51 @@ const serveArticlePage = async (req: Request, res: Response) => {
     $('meta[property="og:description"]').attr("content", description);
     $('meta[name="twitter:title"]').attr("content", newTitle);
     $('meta[name="twitter:description"]').attr("content", description);
-    res.send($.html());
+    res.status(200).send($.html());
   } catch (err) {
     console.error(`Error serving article page for ID: ${id}`, err);
+    // res.sendFile(HTML_TEMPLATE_PATH);
+    return serveApp(req, res);
+  }
+};
+
+const serveCreditsPage = async (req: Request, res: Response) => {
+  try {
+    const htmlTemplate = await fs.readFile(HTML_TEMPLATE_PATH, "utf-8");
+    const description = "使用パッケージやアセットに関するクレジット表記";
+    const $ = cheerio.load(htmlTemplate);
+    const originalTitle = $("title").text();
+    const newTitle = `クレジット - ${originalTitle}`;
+    $("title").text(newTitle);
+    $('meta[name="description"]').attr("content", description);
+    $('meta[property="og:title"]').attr("content", newTitle);
+    $('meta[property="og:description"]').attr("content", description);
+    $('meta[name="twitter:title"]').attr("content", newTitle);
+    $('meta[name="twitter:description"]').attr("content", description);
+    res.send($.html());
+  } catch (err) {
+    console.error(`Error serving article page for CREDITS:`, err);
+    // res.sendFile(HTML_TEMPLATE_PATH);
+    return serveApp(req, res);
+  }
+};
+
+const serveTeapotPage = async (req: Request, res: Response) => {
+  try {
+    const htmlTemplate = await fs.readFile(HTML_TEMPLATE_PATH, "utf-8");
+    const description = "I'm a teapot!";
+    const $ = cheerio.load(htmlTemplate);
+    const originalTitle = $("title").text();
+    const newTitle = `418 - ${originalTitle}`;
+    $("title").text(newTitle);
+    $('meta[name="description"]').attr("content", description);
+    $('meta[property="og:title"]').attr("content", newTitle);
+    $('meta[property="og:description"]').attr("content", description);
+    $('meta[name="twitter:title"]').attr("content", newTitle);
+    $('meta[name="twitter:description"]').attr("content", description);
+    res.status(418).send($.html());
+  } catch (err) {
+    console.error(`Error serving article page for 418:`, err);
     // res.sendFile(HTML_TEMPLATE_PATH);
     return serveApp(req, res);
   }
@@ -770,8 +872,20 @@ app.get("/a", serveApp);
 app.get("/a/:id", serveApp);
 app.get("/b", (req, res) => res.redirect("/"));
 app.get("/b/:id", serveArticlePage);
+app.get("/credits", serveCreditsPage);
 app.get("/rss", (req, res) => res.redirect(301, "/feed"));
 app.get("/feed", serveRssFeed);
+
+app.get("/418", serveTeapotPage);
+app.get("/teapot", serveTeapotPage);
+
+app.use((req: Request, res: Response) => {
+  if (req.originalUrl.startsWith("/api/")) {
+    return res.status(404).json({ message: "Endpoint not found." });
+  }
+
+  res.status(404).sendFile(HTML_TEMPLATE_PATH);
+});
 
 // サーバー起動
 app.listen(PORT, () =>

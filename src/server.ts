@@ -74,7 +74,7 @@ setup();
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-app.use(limiter);
+// app.use(limiter);
 app.use(express.static(path.join(__dirname, "../lib/components")));
 app.use("/src", express.static(path.join(__dirname, "../routes/src")));
 // app.use("/files", express.static(path.join(__dirname, "../lib/pages/files")));
@@ -733,7 +733,7 @@ api.get("/packages", (req: Request, res: Response) => {
   });
 });
 
-app.use("/api", api);
+app.use("/api", limiter, api);
 
 // ページ配信
 const serveArticlePage = async (req: Request, res: Response) => {

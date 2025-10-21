@@ -1,8 +1,3 @@
-/*
- * Prism.jsのカスタムテーマ
- * ライト/ダークで共通の配色を使い、背景と文字色など見づらい部分のみを調整
- */
-
 :root {
   --prism-keyword: #c792ea;
   --prism-string: #8dc26b;

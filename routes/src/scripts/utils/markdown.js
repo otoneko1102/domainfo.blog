@@ -4,6 +4,9 @@ import katex from "katex";
 import Prism from "prismjs";
 import { dataStorage } from "../state";
 import { sha256 } from "./crypto";
+import mermaid from "mermaid";
+
+mermaid.initialize({ startOnLoad: false });
 
 const latexInline = {
   name: "latexInline",
@@ -37,6 +40,42 @@ const latexBlock = {
   renderer(token) {
     return `<p>${katex.renderToString(token.text, { displayMode: true, throwOnError: false })}</p>`;
   },
+};
+
+const mermaidBlock = {
+  name: "mermaidBlock",
+  level: "block",
+  start(src) {
+    return src.match(/^\s*:::/)?.index;
+  },
+  tokenizer(src) {
+    const rule = /^\s*:::\s*([\s\S]+?)\s*:::\s*/;
+    const match = rule.exec(src);
+    if (match) {
+      return {
+        type: "mermaidBlock",
+        raw: match[0],
+        text: match[1].trim(),
+      };
+    }
+  },
+  renderer(token) {
+    return `<div class="mermaid">${escapeHtml(token.text)}</div>`;
+  },
+};
+
+const escapeHtml = (str) => {
+  if (!str) return "";
+  return str.replace(/[&<>"']/g, (match) => {
+    const map = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return map[match];
+  });
 };
 
 const underline = {
@@ -92,7 +131,7 @@ const details = {
 };
 
 marked.use({
-  extensions: [latexInline, latexBlock, underline, details],
+  extensions: [latexInline, latexBlock, mermaidBlock, underline, details],
   breaks: true,
 });
 
@@ -156,4 +195,14 @@ export const parseMarkdown = async (markdownText) => {
   }
 
   return processedHtml;
+};
+
+export const runMermaid = async () => {
+  try {
+    await mermaid.run({
+      nodes: document.body.querySelectorAll(".mermaid"),
+    });
+  } catch (err) {
+    console.error("Mermaid rendering error:", err);
+  }
 };

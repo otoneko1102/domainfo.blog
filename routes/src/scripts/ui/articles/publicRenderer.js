@@ -1,5 +1,5 @@
 import { contentArea } from "../../state.js";
-import { parseMarkdown } from "../../utils/markdown.js";
+import { parseMarkdown, runMermaid } from "../../utils/markdown.js";
 import { renderNotFoundView } from "../global/errorViews.js";
 import Prism from "prismjs";
 
@@ -27,6 +27,7 @@ export const renderPublicView = async (id) => {
       <a href="/" class="back-to-list-link">&larr; 記事一覧に戻る</a>
       <div class="view-public">${htmlContent}</div>
     `;
+    await runMermaid();
     Prism.highlightAll();
     if (window.initializeXpdfViewers) {
       setTimeout(() => window.initializeXpdfViewers(), 0);

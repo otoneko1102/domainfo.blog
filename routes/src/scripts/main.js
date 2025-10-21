@@ -1,5 +1,6 @@
 import "xpdf-viewer";
 import "../styles/utils/prism.css";
+import "../styles/utils/mermaid.css";
 import "katex/dist/katex.min.css";
 import router from "./router.js";
 import { initializeGlobalEventListeners } from "./ui/global/main.js";

@@ -1,6 +1,6 @@
 import { contentArea, state, setState } from "../../state.js";
 import { fetchWithAuth } from "../../auth.js";
-import { parseMarkdown } from "../../utils/markdown.js";
+import { parseMarkdown, runMermaid } from "../../utils/markdown.js";
 import { syncPaneHeights } from "../../utils/helpers.js";
 import { renderNotFoundView } from "../global/errorViews.js";
 import { renderImageGallery, initializeUploader } from "./fileManager.js";
@@ -68,7 +68,6 @@ export const renderEditorView = async (id) => {
     const view = document.getElementById("view");
     const editor = document.getElementById("editor");
     view.innerHTML = await parseMarkdown(content || "");
-    Prism.highlightAll();
 
     initializeUploader(id);
     const tagManager = initializeTagManager(articleData.tags);
@@ -77,12 +76,13 @@ export const renderEditorView = async (id) => {
 
     editor.addEventListener("input", async () => {
       view.innerHTML = await parseMarkdown(editor.value);
+      await runMermaid();
+      Prism.highlightAll();
       if (window.initializeXpdfViewers) {
         setTimeout(() => window.initializeXpdfViewers(), 0);
       }
       syncPaneHeights();
       setState({ hasUnsavedChanges: true });
-      Prism.highlightAll();
     });
 
     const beforeUnloadHandler = (e) => {
@@ -120,6 +120,8 @@ export const renderEditorView = async (id) => {
     document.getElementById("editor-menu-open-btn").classList.remove("hidden");
     syncPaneHeights();
 
+    await runMermaid();
+    Prism.highlightAll();
     if (window.initializeXpdfViewers) {
       setTimeout(() => window.initializeXpdfViewers(), 0);
     }

@@ -321,6 +321,11 @@ html[data-theme="dark"] .article-delete-btn:hover {
 .view-public p {
   line-height: 1.8;
 }
+#view details summary,
+.view-public details summary {
+  background-color: var(--code-bg-color);
+  padding: 5px;
+}
 #view pre,
 .view-public pre {
   background-color: var(--code-bg-color);

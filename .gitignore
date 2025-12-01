@@ -4,3 +4,5 @@ node_modules/
 private/
 dist/
 lib/
+
+routes/assets/img/*

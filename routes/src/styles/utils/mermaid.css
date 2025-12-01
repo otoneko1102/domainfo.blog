@@ -1,0 +1,68 @@
+:root,
+:root[data-theme="light"] {
+  --mermaid-bg: #ffffff;
+  --mermaid-fg: #333333;
+  --mermaid-line: #555555;
+  --mermaid-node-border: #999999;
+  --mermaid-node-bg: #f9f9f9;
+  --mermaid-primary: #4e8cff;
+}
+
+:root[data-theme="dark"] {
+  --mermaid-bg: #242932;
+  --mermaid-fg: #d8dee9;
+  --mermaid-line: #999999;
+  --mermaid-node-border: #aaaaaa;
+  --mermaid-node-bg: #3c4352;
+  --mermaid-primary: #82aaff;
+}
+
+.mermaid {
+  text-align: center;
+  background-color: var(--mermaid-bg);
+}
+
+.mermaid svg {
+  max-height: 50vh;
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon,
+.mermaid .node ellipse {
+  fill: var(--mermaid-node-bg);
+  stroke: var(--mermaid-node-border);
+  stroke-width: 1.5px;
+}
+
+.mermaid .node .nodeLabel {
+  color: var(--mermaid-fg);
+}
+.mermaid .node tspan {
+  fill: var(--mermaid-fg);
+}
+
+.mermaid .edgePaths .path {
+  stroke: var(--mermaid-line);
+}
+
+.mermaid .arrowheadPath {
+  fill: var(--mermaid-line);
+  stroke: var(--mermaid-line);
+}
+
+.mermaid .edgeLabel {
+  color: var(--mermaid-fg);
+  fill: var(--mermaid-fg);
+  background-color: var(--mermaid-bg);
+}
+
+.mermaid .task {
+  fill: var(--mermaid-primary);
+  stroke: var(--mermaid-primary);
+}
+.mermaid .taskText {
+  fill: var(--mermaid-bg);
+}

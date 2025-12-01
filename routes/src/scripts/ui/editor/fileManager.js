@@ -1,6 +1,7 @@
-import { getAuthBody } from "../../auth.js";
+import { getAuthBody, fetchWithAuth } from "../../auth.js";
+import { dataStorage } from "../../state.js";
+import { sha256 } from "../../utils/crypto.js";
 
-// ファイル削除処理
 const handleDeleteFile = async (id, filename) => {
   if (!confirm(`"${filename}" を削除しますか？`)) return;
 
@@ -13,7 +14,7 @@ const handleDeleteFile = async (id, filename) => {
     const result = await response.json();
     if (response.ok) {
       alert(result.message);
-      await renderImageGallery(id); // ギャラリーを再描画
+      await renderImageGallery(id);
     } else {
       alert(`エラー: ${result.message}`);
     }
@@ -22,13 +23,18 @@ const handleDeleteFile = async (id, filename) => {
   }
 };
 
-// 画像ギャラリーを描画
 export const renderImageGallery = async (id) => {
   const gallery = document.getElementById("image-gallery");
   const editor = document.getElementById("editor");
   if (!gallery || !editor) return;
 
-  const res = await fetch(`/api/articles/${id}/files`);
+  const password = dataStorage.getItem("adminPassword");
+  if (!password) {
+    gallery.innerHTML = "<p>ファイルを表示できません。</p>";
+    return;
+  }
+
+  const res = await fetchWithAuth(`/api/articles/${id}/files`);
   const files = await res.json();
 
   if (files.length === 0) {
@@ -36,27 +42,80 @@ export const renderImageGallery = async (id) => {
     return;
   }
 
+  const hashPromises = files.map((file) => {
+    const baseToHash = `${password}${id}${file.name}`;
+    return sha256(baseToHash);
+  });
+  const hashes = await Promise.all(hashPromises);
+
   gallery.innerHTML = files
-    .map((filename) => {
-      const filePath = `/files/${id}/${filename}`;
-      const isPdf = filename.toLowerCase().endsWith(".pdf");
-      return `
-      <div class="thumbnail ${isPdf ? "pdf-thumbnail" : ""}">
-        ${
-          isPdf
-            ? `<a href="${filePath}" title="${filename}をクリックしてMarkdownを挿入" data-filepath="${filePath}">${filename}</a>`
-            : `<img src="${filePath}" alt="${filename}" title="クリックしてMarkdownを挿入" data-filepath="${filePath}" />`
-        }
-        <button class="delete-btn" data-filename="${filename}" title="削除する">×</button>
-      </div>`;
+    .map((file, index) => {
+      const cleanFilePath = `/files/${id}/${file.name}`;
+      const authFilePath = `${cleanFilePath}?key=${hashes[index]}`;
+      let thumbnailHtml = "";
+
+      if (file.type === "application/pdf") {
+        thumbnailHtml = `
+        <div class="thumbnail pdf-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <span class="pdf-icon">PDF</span>
+          <span class="pdf-name">${file.name}</span>
+        </div>`;
+      } else if (
+        file.type.startsWith("video/") ||
+        file.type.startsWith("application/mp4")
+      ) {
+        /*
+        thumbnailHtml = `
+        <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <video src="${authFilePath}" autoplay muted loop playsinline preload="metadata"></video>
+        </div>`;
+        */
+        thumbnailHtml = `
+        <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <video src="${authFilePath}" autoplay muted loop playsinline preload="metadata"></video>
+        </div>`;
+      } else if (file.type.startsWith("image/")) {
+        thumbnailHtml = `
+        <div class="thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <img src="${authFilePath}" alt="${file.name}" />
+        </div>`;
+      } else if (file.type.startsWith("audio/")) {
+        thumbnailHtml = `
+        <div class="thumbnail audio-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <span class="audio-icon music-icon"></span>
+          <span class="audio-name">${file.name}</span>
+        </div>`;
+      } else {
+        thumbnailHtml = `
+        <div class="thumbnail other-thumbnail" data-filepath="${cleanFilePath}" data-filename="${file.name}" title="${file.name}">
+          <span>${file.name}</span>
+        </div>`;
+      }
+
+      return `${thumbnailHtml.replace("</div>", `<button class="delete-btn" data-filename="${file.name}" title="削除する">×</button></div>`)}`;
     })
     .join("");
 
-  // サムネイルクリックでMarkdownを挿入
-  gallery.querySelectorAll(".thumbnail img, .thumbnail a").forEach((item) => {
+  const videos = gallery.querySelectorAll("video");
+  videos.forEach((video) => {
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        console.error("Video autoplay was prevented:", error);
+      });
+    }
+  });
+
+  gallery.querySelectorAll(".thumbnail").forEach((item) => {
     item.addEventListener("click", (e) => {
+      if (e.target.classList.contains("delete-btn")) return;
+
       e.preventDefault();
-      const markdownToInsert = `\n![${item.alt || item.textContent}](${item.dataset.filepath})\n`;
+      const filename = item.dataset.filename;
+      const filepath = item.dataset.filepath;
+      const markdownToInsert = `![${filename}](${filepath})\n`;
+
       const currentPos = editor.selectionStart;
       editor.value =
         editor.value.slice(0, currentPos) +
@@ -64,11 +123,11 @@ export const renderImageGallery = async (id) => {
         editor.value.slice(currentPos);
       editor.focus();
       editor.selectionEnd = currentPos + markdownToInsert.length;
+
       editor.dispatchEvent(new Event("input"));
     });
   });
 
-  // 削除ボタンのイベント
   gallery.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -77,11 +136,19 @@ export const renderImageGallery = async (id) => {
   });
 };
 
-// ファイルアップロード機能の初期化
 export const initializeUploader = (id) => {
   const uploadBtn = document.getElementById("upload-btn");
   const fileInput = document.getElementById("file-input");
   const filenameInput = document.getElementById("filename-input");
+  const fileNameDisplay = document.getElementById("file-name-display");
+
+  fileInput?.addEventListener("change", () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      fileNameDisplay.textContent = fileInput.files[0].name;
+    } else {
+      fileNameDisplay.textContent = "選択されていません";
+    }
+  });
 
   uploadBtn?.addEventListener("click", async () => {
     if (!fileInput.files[0]) {
@@ -91,14 +158,13 @@ export const initializeUploader = (id) => {
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
     formData.append("filename", filenameInput.value);
-    // getAuthBodyはJSON用なので、FormData用にパスワードを直接追加
-    formData.append(
-      "password",
-      localStorage.getItem("adminPassword") ||
-        sessionStorage.getItem("adminPassword"),
-    );
+    formData.append("password", dataStorage.getItem("adminPassword"));
+
+    const originalText = uploadBtn.textContent;
 
     try {
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = "アップロード中...";
       const response = await fetch(`/api/articles/${id}/files`, {
         method: "POST",
         body: formData,
@@ -108,12 +174,16 @@ export const initializeUploader = (id) => {
         alert(result.message);
         fileInput.value = "";
         filenameInput.value = "";
+        fileNameDisplay.textContent = "選択されていません";
         await renderImageGallery(id);
       } else {
         alert(`エラー: ${result.message}`);
       }
     } catch (err) {
       alert("アップロードに失敗しました。");
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = originalText;
     }
   });
 };

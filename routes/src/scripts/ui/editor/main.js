@@ -1,12 +1,14 @@
-import { contentArea, setState } from "../../state.js";
-import { parseMarkdown } from "../../utils/markdown.js";
+import { contentArea, state, setState } from "../../state.js";
+import { fetchWithAuth } from "../../auth.js";
+import { parseMarkdown, runMermaid } from "../../utils/markdown.js";
 import { syncPaneHeights } from "../../utils/helpers.js";
+import { renderNotFoundView } from "../global/errorViews.js";
 import { renderImageGallery, initializeUploader } from "./fileManager.js";
 import { initializeTagManager } from "./tagManager.js";
 import { initializeCoreEditorEvents } from "./editorEvents.js";
+import Prism from "prismjs";
 
 export const renderEditorView = async (id) => {
-  // 1. 骨格となるHTMLを先に描画
   contentArea.innerHTML = `
     <a href="/a" class="back-to-list-link">&larr; 記事一覧に戻る</a>
     <div class="editor-main-container">
@@ -20,7 +22,9 @@ export const renderEditorView = async (id) => {
   menuContainer.innerHTML = `
     <div class="editor-menu-header">
       <h3>設定とファイル</h3>
-      <button id="editor-menu-close-btn" class="icon-btn" title="閉じる"><span class="icon close-icon"></span></button>
+      <button id="editor-menu-close-btn" class="icon-btn" title="閉じる">
+        <span class="icon close-icon"></span>
+      </button>
     </div>
     <div class="editor-menu-content">
       <div class="view-toggle">
@@ -31,40 +35,52 @@ export const renderEditorView = async (id) => {
       <div class="tags-container">
         <h4>タグ編集</h4>
         <div id="tags-list"></div>
-        <div class="tag-input-group"><input type="text" id="tag-input" placeholder="新しいタグを追加" /><button id="add-tag-btn" class="button">+</button></div>
+        <div class="tag-input-group">
+          <input type="text" id="tag-input" placeholder="新しいタグを追加" />
+          <button id="add-tag-btn" class="button">+</button>
+        </div>
       </div>
       <div class="upload-container">
         <h4>ファイル管理</h4>
-        <input type="file" id="file-input" />
-        <input type="text" id="filename-input" placeholder="保存ファイル名 (拡張子不要)" />
+        <div class="file-input-wrapper">
+          <input type="file" id="file-input" class="file-input-hidden" />
+          <label for="file-input" class="button">ファイルを選択</label>
+          <span id="file-name-display">選択されていません</span>
+        </div>
+        <input type="text" id="filename-input" placeholder="保存ファイル名 (拡張子不要)" autocomplete="off" />
         <button id="upload-btn" class="button">アップロード</button>
       </div>
-      <div id="image-gallery" class="image-gallery"><p>画像を読み込み中...</p></div>
+      <h4>クリックして挿入</h4>
+      <div id="image-gallery" class="image-gallery">
+        <p>画像を読み込み中...</p>
+      </div>
     </div>`;
 
-  // 2. 記事データをAPIから取得
   try {
-    const response = await fetch(`/api/articles/${id}`);
-    if (!response.ok) throw new Error("記事の読み込みに失敗しました。");
-    const articleData = await response.json();
+    const response = await fetchWithAuth(`/api/articles/${id}`);
+    if (!response.ok) {
+      return await renderNotFoundView("記事の読み込みに失敗しました。");
+    }
+    const { content, meta: articleData } = await response.json();
 
-    // 3. 取得したデータでUIを更新
     document.getElementById("edit").innerHTML =
-      `<textarea id="editor">${articleData.content || ""}</textarea>`;
+      `<textarea id="editor">${content || ""}</textarea>`;
     const view = document.getElementById("view");
     const editor = document.getElementById("editor");
-    view.innerHTML = parseMarkdown(articleData.content || "");
+    view.innerHTML = await parseMarkdown(content || "");
 
-    // 4. 各機能モジュールを初期化
     initializeUploader(id);
     const tagManager = initializeTagManager(articleData.tags);
     initializeCoreEditorEvents(id, articleData, tagManager.getTags);
     await renderImageGallery(id);
 
-    // 5. エディタ固有のイベントリスナーを設定
-    editor.addEventListener("input", () => {
-      view.innerHTML = parseMarkdown(editor.value);
-      if (window.initializeXpdfViewers) window.initializeXpdfViewers();
+    editor.addEventListener("input", async () => {
+      view.innerHTML = await parseMarkdown(editor.value);
+      await runMermaid();
+      Prism.highlightAll();
+      if (window.initializeXpdfViewers) {
+        setTimeout(() => window.initializeXpdfViewers(), 0);
+      }
       syncPaneHeights();
       setState({ hasUnsavedChanges: true });
     });
@@ -101,10 +117,15 @@ export const renderEditorView = async (id) => {
         document.getElementById("show-editor-btn").classList.remove("active");
       });
 
-    // 6. 最終的なUI調整
     document.getElementById("editor-menu-open-btn").classList.remove("hidden");
     syncPaneHeights();
-  } catch (error) {
-    contentArea.innerHTML = `<p>${error.message}</p>`;
+
+    await runMermaid();
+    Prism.highlightAll();
+    if (window.initializeXpdfViewers) {
+      setTimeout(() => window.initializeXpdfViewers(), 0);
+    }
+  } catch (err) {
+    contentArea.innerHTML = `<p>${err.message}</p>`;
   }
 };

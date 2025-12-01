@@ -4,9 +4,9 @@ import { renderArticleList } from "./listRenderer.js";
 
 export const handleNewArticle = async () => {
   const id = prompt(
-    "新しい記事のIDを入力してください (小文字英数、ハイフンのみ)",
+    "新しい記事のIDを入力してください (小文字英数、ハイフン、アンダースコアのみ):",
   );
-  if (!id || !/^[a-z0-9-]+$/.test(id)) {
+  if (!id || !/^[a-z0-9-_]+$/.test(id)) {
     if (id !== null) alert("無効なIDです。");
     return;
   }
@@ -41,7 +41,6 @@ export const handleDeleteArticle = async (id, title) => {
     const result = await response.json();
     if (response.ok) {
       alert(result.message);
-      // 記事一覧を再描画
       await renderArticleList("admin", 1);
     } else {
       alert(`エラー: ${result.message}`);

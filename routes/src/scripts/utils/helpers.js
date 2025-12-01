@@ -1,4 +1,3 @@
-// エディタとプレビューペインの高さを同期させる
 export const syncPaneHeights = () => {
   const editor = document.getElementById("editor");
   const view = document.getElementById("view");

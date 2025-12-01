@@ -1,0 +1,37 @@
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background-color: #121212;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 0.5s ease-out,
+    visibility 0.5s ease-out;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+
+  border: 5px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+body.loaded #loading-screen {
+  opacity: 0;
+  visibility: hidden;
+}

@@ -1,13 +1,28 @@
 import { dataStorage } from "./state.js";
 import router from "./router.js";
 
-// APIリクエストのbodyにパスワードを追加するヘルパー関数
 export const getAuthBody = (body = {}) => {
   const password = dataStorage.getItem("adminPassword");
   return { ...body, password };
 };
 
-// サーバーにパスワードを送信して認証状態を確認
+export const fetchWithAuth = (url) => {
+  const password = dataStorage.getItem("adminPassword");
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (password) {
+    headers["X-Admin-Password"] = password;
+  }
+
+  return fetch(url, {
+    method: "GET",
+    headers: headers,
+  });
+};
+
 export const checkAuth = async () => {
   const storedPassword = dataStorage.getItem("adminPassword");
   if (!storedPassword) return false;
@@ -24,7 +39,6 @@ export const checkAuth = async () => {
   }
 };
 
-// ログインモーダルを表示
 export const showLoginModal = () => {
   const loginModal = document.getElementById("login-modal");
   if (loginModal) {
@@ -32,7 +46,6 @@ export const showLoginModal = () => {
   }
 };
 
-// ログイン処理
 export const handleLogin = async () => {
   const passwordInput = document.getElementById("password-input");
   const loginError = document.getElementById("login-error");
@@ -50,13 +63,13 @@ export const handleLogin = async () => {
       dataStorage.setItem("adminPassword", password);
       loginError.textContent = "";
       passwordInput.value = "";
-      await router(); // 認証成功後、ルーターを再実行してページを再描画
+      await router();
     } else {
       loginError.textContent = "パスワードが違います。";
       passwordInput.value = "";
     }
-  } catch (error) {
+  } catch (err) {
     loginError.textContent = "認証中にエラーが発生しました。";
-    console.error("Login failed:", error);
+    console.error("Login failed:", err);
   }
 };

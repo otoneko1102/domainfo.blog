@@ -3,22 +3,23 @@ export const initializeTagManager = (initialTags = []) => {
   const tagInput = document.getElementById("tag-input");
   const addTagBtn = document.getElementById("add-tag-btn");
 
-  // 親コンポーネントでタグの状態を管理
   let currentTags = [...initialTags];
 
   const renderTags = () => {
     tagsListDiv.innerHTML = currentTags
       .map(
         (tag, index) =>
-          `<div class="tag-item"><span>${tag}</span><button class="delete-tag-btn" data-index="${index}">×</button></div>`,
+          `<div class="tag-item">
+            <span>${tag}</span>
+            <button class="delete-tag-btn" data-index="${index}">×</button>
+          </div>`,
       )
       .join("");
 
-    // 削除ボタンにイベントを再設定
     document.querySelectorAll(".delete-tag-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         currentTags.splice(btn.dataset.index, 1);
-        renderTags(); // UIを更新
+        renderTags();
       });
     });
   };
@@ -40,9 +41,8 @@ export const initializeTagManager = (initialTags = []) => {
     }
   });
 
-  renderTags(); // 初期描画
+  renderTags();
 
-  // 現在のタグ配列を返すゲッター
   return {
     getTags: () => currentTags,
   };

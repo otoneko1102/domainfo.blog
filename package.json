@@ -12,7 +12,8 @@
     "start": "node dist/server.js",
     "dev:server": "nodemon src/server.ts",
     "dev:client": "vite",
-    "dev": "npm run dev:server && npm run dev:client"
+    "dev": "npm run dev:server && npm run dev:client",
+    "restart": "sh ./tools/restart.sh"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
   "description": "",
   "dependencies": {
     "cheerio": "^1.1.2",
+    "cors": "^2.8.5",
     "dompurify": "^3.2.6",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
@@ -39,6 +41,7 @@
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/fs-extra": "^11.0.4",

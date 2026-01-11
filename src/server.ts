@@ -2,6 +2,7 @@ import "dotenv/config";
 import fs from "fs-extra";
 import path from "path";
 import express, { Request, Response, Router, NextFunction } from "express";
+import cors from "cors";
 import rateLimit from "express-rate-limit";
 import * as cheerio from "cheerio";
 import multer from "multer";
@@ -72,6 +73,7 @@ function setup(): void {
 }
 setup();
 
+app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // app.use(limiter);
@@ -831,7 +833,7 @@ const serveRssFeed = async (req: Request, res: Response) => {
   const metadata = await readMetadata();
   const publicArticles = Object.entries(metadata)
     .map(([id, meta]) => ({ id, ...meta }))
-    .filter((article) => article.public && article.createdAt)
+    .filter((article) => article.public && article.createdAt && !article.hidden)
     .sort(
       (a, b) =>
         new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime(),

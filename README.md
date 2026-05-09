@@ -13,4 +13,4 @@
 
 ## テンプレート
 
-[otoneko1102/blog](https://github.com/otoneko1102/blog)
+[otoneko1102/blog](https://github.com/otnc/blog)
